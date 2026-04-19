@@ -6,6 +6,22 @@ The **Ethereum Virtual Machine** (EVM) is a deterministic, stack-based virtual m
 
 Think of the EVM as a sandboxed calculator with three scratch spaces:
 
+```mermaid
+graph LR
+    subgraph "EVM Machine State (μ)"
+        PC["Program Counter"]
+        S["Stack<br/>(1024 × U256)"]
+        M["Memory<br/>(byte array, ephemeral)"]
+    end
+    subgraph "World State (σ)"
+        ST["Storage<br/>(U256 → U256, persistent)"]
+    end
+    BC["Bytecode"] --> PC
+    PC --> S
+    S --> M
+    S --> ST
+```
+
 1. **Stack** — a LIFO array of 256-bit values, max depth 1024
 2. **Memory** — a byte-addressable, expandable byte array, wiped after each call
 3. **Storage** — a persistent key-value map (256-bit → 256-bit) tied to each contract account

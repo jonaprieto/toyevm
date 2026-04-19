@@ -34,6 +34,21 @@ Edges represent possible control flow between blocks:
 | `JUMPI` | 2 edges: true branch (target) + false branch (fall-through) |
 | `STOP` / `RETURN` / `REVERT` | 0 edges (terminal) |
 
+Here's a CFG for the loop bytecode from Day 3 (`i = 0; while i < 5: i++; return i`):
+
+```mermaid
+graph TD
+    B0["Block 0<br/>PUSH1 0"]
+    B1["Block 1 (JUMPDEST)<br/>PUSH1 5, DUP2, LT<br/>PUSH1 &lt;body&gt;, JUMPI"]
+    B2["Block 2<br/>MSTORE, RETURN"]
+    B3["Block 3 (JUMPDEST)<br/>PUSH1 1, ADD<br/>PUSH1 &lt;loop&gt;, JUMP"]
+
+    B0 --> B1
+    B1 -- "i < 5 (true)" --> B3
+    B1 -- "i >= 5 (false)" --> B2
+    B3 --> B1
+```
+
 ## Static jump resolution
 
 EVM jumps are technically **dynamic** — the destination is a runtime stack value. But most jumps are preceded by a `PUSH` with a constant, making them **statically resolvable**:

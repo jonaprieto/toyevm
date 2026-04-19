@@ -2,6 +2,19 @@
 
 When one contract calls another, the EVM creates a new **call frame** — a fresh execution environment with its own stack, memory, and program counter. The original frame is suspended until the sub-call returns.
 
+```mermaid
+sequenceDiagram
+    participant A as Contract A
+    participant EVM as EVM
+    participant B as Contract B
+
+    A->>EVM: CALL(B, gas, value, input)
+    EVM->>EVM: Create new frame<br/>(fresh stack, memory)
+    EVM->>B: Execute B's bytecode
+    B-->>EVM: RETURN(output)
+    EVM-->>A: Resume A<br/>(success=1, returndata=output)
+```
+
 ## Call types
 
 | Opcode | msg.sender | Storage | State mods | Value transfer |

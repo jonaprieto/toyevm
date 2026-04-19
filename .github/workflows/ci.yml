@@ -40,6 +40,7 @@ jobs:
           cargo install mdbook --version 0.4.43 --no-default-features
           cargo install mdbook-katex
           cargo install mdbook-admonish
+          cargo install mdbook-mermaid --version 0.14.0
 
       - name: Build book
         run: mdbook build book/

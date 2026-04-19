@@ -26,6 +26,19 @@ This pushes 3, pushes 5, adds them (result: 8 on stack), and stops.
 
 ## The fetch-decode-execute loop
 
+```mermaid
+flowchart TD
+    A["Fetch byte at PC"] --> B["Decode opcode"]
+    B --> C{"Gas enough?"}
+    C -- No --> OOG["OutOfGas error"]
+    C -- Yes --> D["Deduct gas"]
+    D --> E["Execute opcode"]
+    E --> F{"STOP / RETURN?"}
+    F -- No --> G["Advance PC"]
+    G --> A
+    F -- Yes --> H["Return result"]
+```
+
 Our interpreter follows the classic pattern:
 
 ```
