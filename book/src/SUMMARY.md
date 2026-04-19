@@ -15,3 +15,9 @@
 - [Bytecode and the Execution Loop](./day2/01_bytecode.md)
 - [Gas: The EVM's Resource Model](./day2/02_gas.md)
 - [Interview Corner](./day2/03_interview_corner.md)
+
+# Day 3 — State and Control Flow
+
+- [Storage and EIP-2929](./day3/01_storage.md)
+- [Control Flow: JUMP, JUMPI, and JUMPDEST](./day3/02_control_flow.md)
+- [Interview Corner](./day3/03_interview_corner.md)
