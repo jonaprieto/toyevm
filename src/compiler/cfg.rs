@@ -185,10 +185,10 @@ pub fn find_leaders(bytecode: &[u8]) -> BTreeSet<usize> {
                 | Opcode::STOP
                 | Opcode::RETURN
                 | Opcode::REVERT
-                | Opcode::INVALID => {
-                    if next < bytecode.len() {
-                        leaders.insert(next); // Rule 3
-                    }
+                | Opcode::INVALID
+                    if next < bytecode.len() =>
+                {
+                    leaders.insert(next); // Rule 3
                 }
                 _ => {}
             }
