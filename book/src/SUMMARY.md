@@ -21,3 +21,8 @@
 - [Storage and EIP-2929](./day3/01_storage.md)
 - [Control Flow: JUMP, JUMPI, and JUMPDEST](./day3/02_control_flow.md)
 - [Interview Corner](./day3/03_interview_corner.md)
+
+# Day 4 — Contracts and Deployment
+
+- [Contracts, Deployment, and the Host Trait](./day4/01_contracts.md)
+- [Interview Corner](./day4/02_interview_corner.md)

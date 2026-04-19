@@ -1,0 +1,73 @@
+# Contracts, Deployment, and the Host Trait
+
+Today we cross the boundary from a single-contract interpreter to a system that can create contracts, emit logs, and interact with external state.
+
+## CREATE and CREATE2
+
+When a contract creates another contract, the EVM needs to determine the new contract's address:
+
+**CREATE**: `address = keccak256(rlp([sender, nonce]))[12:]`
+
+The address depends on the sender and their nonce (a counter that increments with each CREATE). This means the address is predictable only if you know the current nonce.
+
+**CREATE2**: `address = keccak256(0xff ++ sender ++ salt ++ keccak256(initcode))[12:]`
+
+CREATE2 (EIP-1014) adds a `salt` parameter, making the address deterministic — you can compute it before deployment. This enables:
+- **Factory patterns**: deploy contracts at known addresses
+- **Counterfactual instantiation**: reference a contract before it exists
+- **Account Abstraction**: pre-compute wallet addresses
+
+## Initcode vs. Runtime Code
+
+When you deploy a contract, you don't send the runtime bytecode directly. You send **initcode** — a program that executes once and whose RETURN value becomes the deployed code.
+
+```
+Transaction: { to: null, data: initcode }
+  → EVM executes initcode
+  → initcode calls RETURN(offset, size)
+  → bytes at memory[offset..offset+size] become the deployed code
+```
+
+This is why Solidity constructors can run arbitrary logic — they're part of the initcode.
+
+## The Host Trait
+
+The interpreter needs to access external state: other contracts' code, account balances, etc. We use the **Host trait** to decouple the interpreter from state management:
+
+```rust
+pub trait Host {
+    fn code(&self, address: &Address) -> Vec<u8>;
+    fn code_size(&self, address: &Address) -> usize;
+    fn balance(&self, address: &Address) -> U256;
+    fn emit_log(&mut self, log: LogEntry);
+    fn logs(&self) -> &[LogEntry];
+}
+```
+
+For testing, `MockHost` implements this trait with HashMaps. In production, a real Host would read from a Merkle trie.
+
+## LOG Opcodes
+
+LOG0 through LOG4 emit event logs with 0 to 4 indexed **topics** and arbitrary **data** bytes.
+
+Gas cost: `375 + 8 * data_length + 375 * num_topics`
+
+| Opcode | Topics | Gas (32 bytes data) |
+|--------|--------|-------------------|
+| LOG0 | 0 | 375 + 256 = 631 |
+| LOG1 | 1 | 375 + 256 + 375 = 1006 |
+| LOG2 | 2 | 375 + 256 + 750 = 1381 |
+| LOG4 | 4 | 375 + 256 + 1500 = 2131 |
+
+Logs are not accessible from within the EVM — they're write-only. Off-chain clients read them via the JSON-RPC `eth_getLogs` API.
+
+## Exercises
+
+- **4.1** — CREATE address derivation is deterministic and varies with sender/nonce
+- **4.2** — CREATE2 address derivation varies with salt and initcode
+- **4.3** — MockHost compiles and implements all Host methods
+- **4.4** — EXTCODESIZE returns correct values via Host
+- **4.5** — LOG0 gas cost matches the formula
+- **4.6** — LOG2 emits correct topics
+
+Run: `cargo test contract` and `cargo test host`
