@@ -505,12 +505,8 @@ mod tests {
     #[test]
     fn mul_large_values() {
         // 2^128 * 2^128 = 2^256 = 0 mod 2^256
-        // In big-endian: 2^128 has bit at position 128, which is byte[15] bit 0
-        let a = U256::from(1u128) + U256::from(u128::MAX);
-        // simpler: build from u128::MAX + 1 = 2^128
-        // Actually use shift: 1 << 128 via two u128 halves
         let mut bytes = [0u8; 32];
-        bytes[15] = 1; // byte 15 = bit 128 in big-endian (bit (31-15)*8 = 128)
+        bytes[15] = 1; // byte 15 = bit 128 in big-endian
         let a = U256::from_bytes(bytes);
         assert_eq!(a * a, U256::ZERO);
     }
