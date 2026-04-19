@@ -76,30 +76,61 @@ impl U256 {
 
     /// Wrapping multiplication: (self * rhs) mod 2^256.
     pub fn wrapping_mul(self, rhs: Self) -> Self {
-        // Schoolbook multiplication on 32-byte big-endian arrays.
-        // We only keep the lower 256 bits (wrapping).
-        let mut result = [0u16; 32];
-        for i in (0..32).rev() {
-            let mut carry: u16 = 0;
-            for j in (0..32).rev() {
-                let k = i + j + 1; // position in a 64-byte result
-                if k < 32 {
-                    // This position overflows our 256-bit result — skip.
-                    break;
-                }
-                let pos = k - 32; // map into our 32-byte result
-                if pos < 32 {
-                    let prod = self.0[i] as u16 * rhs.0[j] as u16 + result[pos] + carry;
-                    result[pos] = prod & 0xFF;
-                    carry = prod >> 8;
+        // We only need the lower 256 bits. Work with u64 limbs for efficiency.
+        // Convert big-endian [u8; 32] to 4 x u64 limbs in little-endian order.
+        let a = Self::to_u64_limbs(self.0);
+        let b = Self::to_u64_limbs(rhs.0);
+
+        // Schoolbook multiplication on 4 x u64 limbs.
+        // result[i+j] += a[i] * b[j], but we only keep limbs 0..3 (lower 256 bits).
+        let mut result = [0u128; 4];
+        for i in 0..4 {
+            for j in 0..4 {
+                if i + j < 4 {
+                    result[i + j] += a[i] as u128 * b[j] as u128;
                 }
             }
         }
-        let mut out = [0u8; 32];
-        for i in 0..32 {
-            out[i] = result[i] as u8;
+        // Propagate carries through the 4 limbs.
+        let mut carry: u128 = 0;
+        let mut limbs = [0u64; 4];
+        for i in 0..4 {
+            let sum = result[i] + carry;
+            limbs[i] = sum as u64;
+            carry = sum >> 64;
         }
-        Self(out)
+        Self::from_u64_limbs(limbs)
+    }
+
+    /// Convert big-endian [u8; 32] to 4 little-endian u64 limbs.
+    /// limbs[0] = least significant 64 bits (bytes[24..32])
+    /// limbs[3] = most significant 64 bits (bytes[0..8])
+    fn to_u64_limbs(bytes: [u8; 32]) -> [u64; 4] {
+        let mut limbs = [0u64; 4];
+        for (i, limb) in limbs.iter_mut().enumerate() {
+            let be_offset = (3 - i) * 8; // limbs[0] ← bytes[24..32]
+            *limb = u64::from_be_bytes([
+                bytes[be_offset],
+                bytes[be_offset + 1],
+                bytes[be_offset + 2],
+                bytes[be_offset + 3],
+                bytes[be_offset + 4],
+                bytes[be_offset + 5],
+                bytes[be_offset + 6],
+                bytes[be_offset + 7],
+            ]);
+        }
+        limbs
+    }
+
+    /// Convert 4 little-endian u64 limbs to big-endian [u8; 32].
+    fn from_u64_limbs(limbs: [u64; 4]) -> Self {
+        let mut bytes = [0u8; 32];
+        for (i, limb) in limbs.iter().enumerate() {
+            let be_offset = (3 - i) * 8; // limbs[0] → bytes[24..32]
+            bytes[be_offset..be_offset + 8].copy_from_slice(&limb.to_be_bytes());
+        }
+        Self(bytes)
     }
 
     /// Division: self / rhs. Returns zero if rhs is zero (EVM convention).
@@ -469,6 +500,30 @@ mod tests {
         // MAX * 2 = MAX + MAX = (2^256 - 1)*2 = 2^257 - 2, mod 2^256 = 2^256 - 2 = MAX - 1
         let result = U256::MAX * U256::from(2u64);
         assert_eq!(result, U256::MAX - U256::ONE);
+    }
+
+    #[test]
+    fn mul_large_values() {
+        // 2^128 * 2^128 = 2^256 = 0 mod 2^256
+        // In big-endian: 2^128 has bit at position 128, which is byte[15] bit 0
+        let a = U256::from(1u128) + U256::from(u128::MAX);
+        // simpler: build from u128::MAX + 1 = 2^128
+        // Actually use shift: 1 << 128 via two u128 halves
+        let mut bytes = [0u8; 32];
+        bytes[15] = 1; // byte 15 = bit 128 in big-endian (bit (31-15)*8 = 128)
+        let a = U256::from_bytes(bytes);
+        assert_eq!(a * a, U256::ZERO);
+    }
+
+    #[test]
+    fn mul_near_max() {
+        // (2^128 + 1) * (2^128 - 1) = 2^256 - 1 = MAX
+        let mut bytes = [0u8; 32];
+        bytes[15] = 1;
+        bytes[31] = 1; // 2^128 + 1
+        let a = U256::from_bytes(bytes);
+        let b = a - U256::from(2u64); // 2^128 - 1
+        assert_eq!(a * b, U256::MAX);
     }
 
     #[test]

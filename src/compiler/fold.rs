@@ -127,21 +127,17 @@ fn is_foldable_binop(op: Opcode) -> bool {
 }
 
 /// Evaluate a binary operation on two constants.
+///
+/// In `PUSH a, PUSH b, OP`: `a` is deeper, `b` is on top.
+/// The interpreter pops `b` (top) then `a` (second).
+/// For non-commutative ops: result = b OP a (top operates on second).
 fn evaluate_binop(op: Opcode, a: U256, b: U256) -> U256 {
-    // Note: EVM stack order is first-pushed = deeper.
-    // In PUSH a, PUSH b, ADD: stack is [a, b], ADD pops b then a → a + b.
-    // But our IR sees PUSH a first, PUSH b second. ADD pops b (top) then a.
-    // So the result is a OP b for commutative ops, and b OP a for non-commutative.
-    // Actually, the first PUSH is deeper, second PUSH is on top.
-    // ADD pops top (b) as first arg, then second (a). In our interpreter:
-    // let a = pop(); let b = pop(); push(a + b) — so it's b_pushed + a_pushed.
-    // For commutative ops it doesn't matter. For SUB/DIV/MOD: result = b - a.
     match op {
-        Opcode::ADD => a + b,
-        Opcode::MUL => a * b,
-        Opcode::SUB => a - b, // first pushed - second pushed
-        Opcode::DIV => a.checked_div(b),
-        Opcode::MOD => a.checked_mod(b),
+        Opcode::ADD => b + a,
+        Opcode::MUL => b * a,
+        Opcode::SUB => b - a,
+        Opcode::DIV => b.checked_div(a),
+        Opcode::MOD => b.checked_mod(a),
         Opcode::AND => a & b,
         Opcode::OR => a | b,
         Opcode::XOR => a ^ b,

@@ -940,8 +940,9 @@ impl Interpreter {
             | Opcode::NUMBER
             | Opcode::DIFFICULTY
             | Opcode::GASLIMIT
-            | Opcode::CHAINID
-            | Opcode::SELFBALANCE => gas::GAS_BASE,
+            | Opcode::CHAINID => gas::GAS_BASE,
+
+            Opcode::SELFBALANCE => gas::GAS_LOW, // EIP-1884: costs 5
 
             Opcode::CALLDATALOAD => gas::GAS_VERY_LOW,
             Opcode::CALLDATACOPY | Opcode::CODECOPY => gas::GAS_VERY_LOW,
