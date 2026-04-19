@@ -10,6 +10,9 @@ macro_rules! todo_exercise {
     };
 }
 
+pub mod gas;
+pub mod interpreter;
 pub mod memory;
+pub mod opcode;
 pub mod stack;
 pub mod types;
