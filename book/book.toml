@@ -1,0 +1,11 @@
+[book]
+title = "toyevm: Build an EVM from Scratch in Rust"
+authors = ["Jonathan Cubides"]
+language = "en"
+src = "src"
+
+[build]
+build-dir = "../target/book"
+
+[output.html]
+git-repository-url = "https://github.com/jonaprieto/toyevm"

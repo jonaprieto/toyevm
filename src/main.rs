@@ -1,3 +1,3 @@
 fn main() {
-    println!("Hello, world!");
+    println!("toyevm — a toy Ethereum Virtual Machine");
 }

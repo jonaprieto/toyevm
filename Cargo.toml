@@ -2,5 +2,17 @@
 name = "toyevm"
 version = "0.1.0"
 edition = "2024"
+description = "A 7-day, exercise-driven tutorial for building an EVM from scratch in Rust"
+license = "MIT"
+
+[lib]
+name = "toyevm"
+path = "src/lib.rs"
+
+[[bin]]
+name = "toyevm"
+path = "src/main.rs"
 
 [dependencies]
+
+[dev-dependencies]
