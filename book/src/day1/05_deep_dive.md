@@ -1,6 +1,6 @@
-# Interview Corner — Day 1
+# Deep Dive — Day 1
 
-These are questions you might encounter in a compiler engineering or blockchain infrastructure interview. After completing today's exercises, you should be able to answer all of them.
+These are questions you might encounter when discussing EVM internals. After completing today's exercises, you should be able to answer all of them.
 
 ---
 
@@ -18,7 +18,7 @@ If a contract pushes the 1025th element, the transaction immediately reverts. Al
 
 **Q: Is EVM memory persistent between transactions?**
 
-No. Memory (μ_m) is ephemeral — it is allocated fresh for each execution context and destroyed when execution completes. **Storage** (σ[a]_s) is the persistent key-value map that survives between transactions. Confusing the two is a common mistake in interviews.
+No. Memory (μ_m) is ephemeral — it is allocated fresh for each execution context and destroyed when execution completes. **Storage** (σ[a]_s) is the persistent key-value map that survives between transactions. Confusing the two is a common mistake in technical discussions.
 
 ---
 

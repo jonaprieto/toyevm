@@ -1,4 +1,4 @@
-# Interview Corner — Day 3
+# Deep Dive — Day 3
 
 ---
 

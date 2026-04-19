@@ -1,4 +1,4 @@
-# Interview Corner — Day 7
+# Deep Dive — Day 7
 
 ---
 

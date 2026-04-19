@@ -1,4 +1,4 @@
-# Interview Corner — Day 4
+# Deep Dive — Day 4
 
 ---
 
@@ -16,7 +16,7 @@ The Host trait separates EVM execution semantics from state management. The inte
 
 **Q: What is the gas cost of emitting a LOG4 with 100 bytes of data?**
 
-`375 + 8 * 100 + 375 * 4 = 375 + 800 + 1500 = 2675 gas`. The base cost is 375, each byte of data costs 8 gas, and each topic costs 375 gas. Interviewers use this to test whether you know the formula and can compute it under pressure.
+`375 + 8 * 100 + 375 * 4 = 375 + 800 + 1500 = 2675 gas`. The base cost is 375, each byte of data costs 8 gas, and each topic costs 375 gas. Reviewers use this to test whether you know the formula and can compute it under pressure.
 
 ---
 

@@ -1,4 +1,4 @@
-# Interview Corner — Day 2
+# Deep Dive — Day 2
 
 ---
 
@@ -10,7 +10,7 @@ The interpreter reads byte `0x01` at the current PC. It decodes this as the `ADD
 
 **Q: What is the gas cost of PUSH1 vs. PUSH32?**
 
-Both cost 3 gas. The immediate bytes (1 byte for PUSH1, 32 bytes for PUSH32) are data, not separate instructions. They are consumed by advancing the PC past them, but they don't incur additional gas charges. This is a common interview trick — candidates sometimes assume longer immediates cost more.
+Both cost 3 gas. The immediate bytes (1 byte for PUSH1, 32 bytes for PUSH32) are data, not separate instructions. They are consumed by advancing the PC past them, but they don't incur additional gas charges. This is a common technical discussion trick — candidates sometimes assume longer immediates cost more.
 
 ---
 

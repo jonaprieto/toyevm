@@ -9,7 +9,7 @@ A 7-day, exercise-driven tutorial for building an Ethereum Virtual Machine from 
 
 ## What is this?
 
-**toyevm** takes you from zero EVM knowledge to being able to discuss EVM internals, gas mechanics, cross-contract calls, and optimization strategies at an interview level — all while writing Rust.
+**toyevm** takes you from zero EVM knowledge to a deep understanding of EVM internals, gas mechanics, cross-contract calls, and optimization strategies — all while writing Rust.
 
 Inspired by [100 Exercises to Learn Rust](https://rust-exercises.com/), each day introduces EVM concepts alongside the Rust code that implements them. You read the theory, then make failing tests pass.
 
@@ -30,7 +30,7 @@ Inspired by [100 Exercises to Learn Rust](https://rust-exercises.com/), each day
 | 6 | `day-6` | From Bytecode to IR — CFG construction, liveness analysis | 112 |
 | 7 | `day-7` | Optimization Passes — constant folding, dead code elimination | 121 |
 
-Each day includes theory chapters (mdBook), exercises with `#[test]`, and an interview corner.
+Each day includes theory chapters (mdBook), exercises with `#[test]`, and a deep dive Q&A section.
 
 ## Getting started
 

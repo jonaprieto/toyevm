@@ -1,6 +1,6 @@
 # toyevm: Build an EVM from Scratch in Rust
 
-Welcome to **toyevm**, a 7-day, exercise-driven tutorial that takes you from zero EVM knowledge to being able to discuss EVM internals, gas mechanics, cross-contract calls, and optimization strategies at an interview level.
+Welcome to **toyevm**, a 7-day, exercise-driven tutorial that takes you from zero EVM knowledge to a deep understanding of EVM internals, gas mechanics, cross-contract calls, and optimization strategies.
 
 ## Who is this for?
 
@@ -15,7 +15,7 @@ Each day introduces EVM concepts alongside the Rust code that implements them. Y
 - **Theory sections** explaining what the EVM does and why
 - **Exercises** with `#[ignore]` tests — your job is to implement the code that makes them pass
 - **Yellow Paper Map** sidebars connecting our code to the formal specification
-- **Interview Corner** sections with questions you might face in a compiler engineering interview
+- **Deep Dive** sections with questions that test your understanding of the concepts
 
 The workflow:
 

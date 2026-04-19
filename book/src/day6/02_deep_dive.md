@@ -1,4 +1,4 @@
-# Interview Corner — Day 6
+# Deep Dive — Day 6
 
 ---
 
