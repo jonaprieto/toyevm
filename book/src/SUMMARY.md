@@ -36,3 +36,8 @@
 
 - [Control Flow Graphs](./day6/01_cfg.md)
 - [Interview Corner](./day6/02_interview_corner.md)
+
+# Day 7 — Optimization Passes
+
+- [Optimization Passes](./day7/01_optimization.md)
+- [Interview Corner](./day7/02_interview_corner.md)
