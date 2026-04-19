@@ -4,10 +4,13 @@ use crate::types::U256;
 ///
 /// In Yellow Paper notation, this is μ_s (machine state, stack component).
 /// The stack grows upward — push appends, pop removes from the top.
+// ANCHOR: stack_struct
 pub struct Stack {
     data: Vec<U256>,
 }
+// ANCHOR_END: stack_struct
 
+// ANCHOR: stack_error
 /// Errors that can occur during stack operations.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StackError {
@@ -16,6 +19,7 @@ pub enum StackError {
     /// Attempted to pop from or peek into an empty stack.
     Underflow,
 }
+// ANCHOR_END: stack_error
 
 impl std::fmt::Display for StackError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -42,6 +46,7 @@ impl Stack {
     /// Push a value onto the top of the stack.
     ///
     /// Returns `StackError::Overflow` if the stack already has 1024 elements.
+    // ANCHOR: stack_push_pop
     pub fn push(&mut self, value: U256) -> Result<(), StackError> {
         if self.data.len() >= MAX_STACK_DEPTH {
             return Err(StackError::Overflow);
@@ -56,6 +61,7 @@ impl Stack {
     pub fn pop(&mut self) -> Result<U256, StackError> {
         self.data.pop().ok_or(StackError::Underflow)
     }
+    // ANCHOR_END: stack_push_pop
 
     /// Peek at the top value without removing it.
     pub fn peek(&self) -> Result<&U256, StackError> {

@@ -118,6 +118,7 @@ impl CallFrame {
     }
 }
 
+// ANCHOR: gas_forward
 /// Calculate the gas to forward to a sub-call using the 63/64 rule (EIP-150).
 ///
 /// The caller can specify a gas amount, but at most 63/64 of remaining gas
@@ -126,6 +127,7 @@ pub fn gas_to_forward(gas_remaining: u64, gas_requested: u64) -> u64 {
     let max_forward = gas_remaining - gas_remaining / 64; // 63/64 of remaining
     gas_requested.min(max_forward)
 }
+// ANCHOR_END: gas_forward
 
 #[cfg(test)]
 mod tests {

@@ -39,6 +39,7 @@ impl Memory {
     /// Ensure memory is at least `size` bytes, expanding if needed.
     /// New bytes are zero-initialized. Size is rounded up to the nearest
     /// 32-byte boundary.
+    // ANCHOR: memory_expand
     fn expand_to(&mut self, size: usize) {
         if size > self.data.len() {
             // Round up to next 32-byte word boundary.
@@ -46,6 +47,7 @@ impl Memory {
             self.data.resize(new_size, 0);
         }
     }
+    // ANCHOR_END: memory_expand
 
     /// Calculate the required memory size for an access at `offset` with `len` bytes.
     /// Returns the new word count if expansion is needed, or current word count.

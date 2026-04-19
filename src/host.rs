@@ -22,6 +22,7 @@ pub struct LogEntry {
     pub data: Vec<u8>,
 }
 
+// ANCHOR: host_trait
 /// The Host trait abstracts external state access for the interpreter.
 pub trait Host {
     /// Get the code deployed at an address. Returns empty for EOAs.
@@ -41,6 +42,7 @@ pub trait Host {
     /// Get all emitted logs (for testing).
     fn logs(&self) -> &[LogEntry];
 }
+// ANCHOR_END: host_trait
 
 /// A mock host backed by HashMaps, suitable for testing.
 pub struct MockHost {

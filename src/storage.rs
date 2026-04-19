@@ -70,6 +70,7 @@ impl Storage {
         (cold, was_zero, new_is_zero)
     }
 
+    // ANCHOR: sload_gas
     /// Get the gas cost for an SLOAD operation.
     pub fn sload_gas(&self, key: &U256) -> u64 {
         if self.warm_slots.contains(key) {
@@ -78,6 +79,7 @@ impl Storage {
             COLD_SLOAD_COST
         }
     }
+    // ANCHOR_END: sload_gas
 
     /// Get the gas cost for an SSTORE operation (simplified).
     pub fn sstore_gas(&self, key: &U256) -> u64 {

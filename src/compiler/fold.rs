@@ -9,6 +9,7 @@ use crate::types::U256;
 use super::cfg::Cfg;
 use super::ir::{BasicBlock, Instruction};
 
+// ANCHOR: optimization_pass_trait
 /// Trait for optimization passes that transform a CFG in place.
 pub trait OptimizationPass {
     /// Run the pass. Returns the number of changes made.
@@ -17,6 +18,7 @@ pub trait OptimizationPass {
     /// Name of the pass (for logging).
     fn name(&self) -> &str;
 }
+// ANCHOR_END: optimization_pass_trait
 
 /// Constant folding: replace PUSH a, PUSH b, BINOP with PUSH (a op b).
 pub struct ConstantFold;

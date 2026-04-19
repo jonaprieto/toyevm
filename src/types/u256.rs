@@ -5,10 +5,13 @@
 /// the EVM's convention for stack values and storage keys.
 ///
 /// In Yellow Paper notation, this corresponds to values in the range [0, 2^256).
+// ANCHOR: u256_struct
 #[derive(Clone, Copy, Debug, Default, Hash, PartialEq, Eq)]
 pub struct U256([u8; 32]);
+// ANCHOR_END: u256_struct
 
 impl U256 {
+    // ANCHOR: u256_constants
     /// The zero value (additive identity).
     pub const ZERO: Self = Self([0u8; 32]);
 
@@ -21,6 +24,7 @@ impl U256 {
 
     /// The maximum value: 2^256 - 1.
     pub const MAX: Self = Self([0xFF; 32]);
+    // ANCHOR_END: u256_constants
 
     /// Create a U256 from a big-endian byte array.
     pub const fn from_bytes(bytes: [u8; 32]) -> Self {
@@ -37,6 +41,7 @@ impl U256 {
         self.0 == [0u8; 32]
     }
 
+    // ANCHOR: wrapping_add
     /// Wrapping addition: (self + rhs) mod 2^256.
     pub fn wrapping_add(self, rhs: Self) -> Self {
         let mut result = [0u8; 32];
@@ -50,6 +55,7 @@ impl U256 {
         // carry is discarded — wrapping semantics.
         Self(result)
     }
+    // ANCHOR_END: wrapping_add
 
     /// Wrapping subtraction: (self - rhs) mod 2^256.
     pub fn wrapping_sub(self, rhs: Self) -> Self {
