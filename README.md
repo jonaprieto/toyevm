@@ -1,8 +1,11 @@
 # toyevm
 
 [![CI](https://github.com/jonaprieto/toyevm/actions/workflows/ci.yml/badge.svg)](https://github.com/jonaprieto/toyevm/actions/workflows/ci.yml)
+[![Book](https://github.com/jonaprieto/toyevm/actions/workflows/pages.yml/badge.svg)](https://jonaprieto.github.io/toyevm/)
 
 A 7-day, exercise-driven tutorial for building an Ethereum Virtual Machine from scratch in Rust.
+
+**[Read the book online](https://jonaprieto.github.io/toyevm/)**
 
 ## What is this?
 
