@@ -2,4 +2,6 @@
 
 pub mod analysis;
 pub mod cfg;
+pub mod dce;
+pub mod fold;
 pub mod ir;
