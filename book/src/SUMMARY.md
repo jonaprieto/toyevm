@@ -26,3 +26,8 @@
 
 - [Contracts, Deployment, and the Host Trait](./day4/01_contracts.md)
 - [Interview Corner](./day4/02_interview_corner.md)
+
+# Day 5 — The Call Stack
+
+- [The Call Stack](./day5/01_call_stack.md)
+- [Interview Corner](./day5/02_interview_corner.md)
