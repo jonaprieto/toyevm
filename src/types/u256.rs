@@ -5,10 +5,13 @@
 /// the EVM's convention for stack values and storage keys.
 ///
 /// In Yellow Paper notation, this corresponds to values in the range [0, 2^256).
+// ANCHOR: u256_struct
 #[derive(Clone, Copy, Debug, Default, Hash, PartialEq, Eq)]
 pub struct U256([u8; 32]);
+// ANCHOR_END: u256_struct
 
 impl U256 {
+    // ANCHOR: u256_constants
     /// The zero value (additive identity).
     pub const ZERO: Self = Self([0u8; 32]);
 
@@ -21,6 +24,7 @@ impl U256 {
 
     /// The maximum value: 2^256 - 1.
     pub const MAX: Self = Self([0xFF; 32]);
+    // ANCHOR_END: u256_constants
 
     /// Create a U256 from a big-endian byte array.
     pub const fn from_bytes(bytes: [u8; 32]) -> Self {
@@ -34,144 +38,39 @@ impl U256 {
 
     /// Check if this value is zero.
     pub fn is_zero(&self) -> bool {
-        self.0 == [0u8; 32]
+        todo_exercise!("Exercise 1.1 — check if all 32 bytes are zero")
     }
 
+    // ANCHOR: wrapping_add
     /// Wrapping addition: (self + rhs) mod 2^256.
-    pub fn wrapping_add(self, rhs: Self) -> Self {
-        let mut result = [0u8; 32];
-        let mut carry: u16 = 0;
-        // Add from least significant byte (index 31) to most significant (index 0).
-        for i in (0..32).rev() {
-            let sum = self.0[i] as u16 + rhs.0[i] as u16 + carry;
-            result[i] = sum as u8;
-            carry = sum >> 8;
-        }
-        // carry is discarded — wrapping semantics.
-        Self(result)
+    pub fn wrapping_add(self, _rhs: Self) -> Self {
+        todo_exercise!("Exercise 1.2 — add byte-by-byte from LSB to MSB, propagating carry")
     }
+    // ANCHOR_END: wrapping_add
 
     /// Wrapping subtraction: (self - rhs) mod 2^256.
-    pub fn wrapping_sub(self, rhs: Self) -> Self {
-        let mut result = [0u8; 32];
-        let mut borrow: i16 = 0;
-        for i in (0..32).rev() {
-            let diff = self.0[i] as i16 - rhs.0[i] as i16 - borrow;
-            if diff < 0 {
-                result[i] = (diff + 256) as u8;
-                borrow = 1;
-            } else {
-                result[i] = diff as u8;
-                borrow = 0;
-            }
-        }
-        Self(result)
+    pub fn wrapping_sub(self, _rhs: Self) -> Self {
+        todo_exercise!("Exercise 1.2 — subtract byte-by-byte with borrow")
     }
 
     /// Wrapping multiplication: (self * rhs) mod 2^256.
-    pub fn wrapping_mul(self, rhs: Self) -> Self {
-        // Schoolbook multiplication on 32-byte big-endian arrays.
-        // We only keep the lower 256 bits (wrapping).
-        let mut result = [0u16; 32];
-        for i in (0..32).rev() {
-            let mut carry: u16 = 0;
-            for j in (0..32).rev() {
-                let k = i + j + 1; // position in a 64-byte result
-                if k < 32 {
-                    // This position overflows our 256-bit result — skip.
-                    break;
-                }
-                let pos = k - 32; // map into our 32-byte result
-                if pos < 32 {
-                    let prod = self.0[i] as u16 * rhs.0[j] as u16 + result[pos] + carry;
-                    result[pos] = prod & 0xFF;
-                    carry = prod >> 8;
-                }
-            }
-        }
-        let mut out = [0u8; 32];
-        for i in 0..32 {
-            out[i] = result[i] as u8;
-        }
-        Self(out)
+    pub fn wrapping_mul(self, _rhs: Self) -> Self {
+        todo_exercise!("Exercise 1.2 — schoolbook multiplication, keep lower 256 bits")
     }
 
     /// Division: self / rhs. Returns zero if rhs is zero (EVM convention).
-    pub fn checked_div(self, rhs: Self) -> Self {
-        if rhs.is_zero() {
-            return Self::ZERO;
-        }
-        // Simple shift-and-subtract long division.
-        self.div_mod(rhs).0
+    pub fn checked_div(self, _rhs: Self) -> Self {
+        todo_exercise!("Exercise 1.2 — long division, return ZERO for div-by-zero")
     }
 
     /// Modulo: self % rhs. Returns zero if rhs is zero (EVM convention).
-    pub fn checked_mod(self, rhs: Self) -> Self {
-        if rhs.is_zero() {
-            return Self::ZERO;
-        }
-        self.div_mod(rhs).1
-    }
-
-    /// Returns (quotient, remainder).
-    fn div_mod(self, rhs: Self) -> (Self, Self) {
-        if rhs.is_zero() {
-            return (Self::ZERO, Self::ZERO);
-        }
-        if self < rhs {
-            return (Self::ZERO, self);
-        }
-
-        let mut quotient = Self::ZERO;
-        let mut remainder = Self::ZERO;
-
-        // Process each bit from MSB to LSB (256 bits total).
-        for bit_idx in 0..256 {
-            // Shift remainder left by 1.
-            remainder = remainder.shift_left_one();
-
-            // Bring down the next bit of the dividend.
-            let byte_pos = bit_idx / 8;
-            let bit_pos = 7 - (bit_idx % 8);
-            if (self.0[byte_pos] >> bit_pos) & 1 == 1 {
-                remainder.0[31] |= 1;
-            }
-
-            // If remainder >= divisor, subtract and set quotient bit.
-            if remainder >= rhs {
-                remainder = remainder.wrapping_sub(rhs);
-                let q_byte = bit_idx / 8;
-                let q_bit = 7 - (bit_idx % 8);
-                quotient.0[q_byte] |= 1 << q_bit;
-            }
-        }
-        (quotient, remainder)
-    }
-
-    /// Shift left by one bit.
-    fn shift_left_one(self) -> Self {
-        let mut result = [0u8; 32];
-        let mut carry = 0u8;
-        for i in (0..32).rev() {
-            result[i] = (self.0[i] << 1) | carry;
-            carry = self.0[i] >> 7;
-        }
-        Self(result)
+    pub fn checked_mod(self, _rhs: Self) -> Self {
+        todo_exercise!("Exercise 1.2 — remainder from division")
     }
 
     /// Convert to u64, returning None if the value exceeds u64::MAX.
     pub fn to_u64(&self) -> Option<u64> {
-        // Check that the top 24 bytes are zero.
-        for i in 0..24 {
-            if self.0[i] != 0 {
-                return None;
-            }
-        }
-        let mut val = 0u64;
-        for i in 24..32 {
-            val = (val << 8) | self.0[i] as u64;
-        }
-        Some(val)
+        todo_exercise!("Exercise 1.4 — check top 24 bytes are zero, then assemble lower 8")
     }
 
     /// Convert to usize, returning None if the value exceeds usize::MAX.
@@ -205,63 +104,43 @@ impl std::ops::Mul for U256 {
 
 impl std::ops::BitAnd for U256 {
     type Output = Self;
-    fn bitand(self, rhs: Self) -> Self {
-        let mut result = [0u8; 32];
-        for (i, byte) in result.iter_mut().enumerate() {
-            *byte = self.0[i] & rhs.0[i];
-        }
-        Self(result)
+    fn bitand(self, _rhs: Self) -> Self {
+        todo_exercise!("Exercise 1.2 — bitwise AND each byte pair")
     }
 }
 
 impl std::ops::BitOr for U256 {
     type Output = Self;
-    fn bitor(self, rhs: Self) -> Self {
-        let mut result = [0u8; 32];
-        for (i, byte) in result.iter_mut().enumerate() {
-            *byte = self.0[i] | rhs.0[i];
-        }
-        Self(result)
+    fn bitor(self, _rhs: Self) -> Self {
+        todo_exercise!("Exercise 1.2 — bitwise OR each byte pair")
     }
 }
 
 impl std::ops::BitXor for U256 {
     type Output = Self;
-    fn bitxor(self, rhs: Self) -> Self {
-        let mut result = [0u8; 32];
-        for (i, byte) in result.iter_mut().enumerate() {
-            *byte = self.0[i] ^ rhs.0[i];
-        }
-        Self(result)
+    fn bitxor(self, _rhs: Self) -> Self {
+        todo_exercise!("Exercise 1.2 — bitwise XOR each byte pair")
     }
 }
 
 impl std::ops::Not for U256 {
     type Output = Self;
     fn not(self) -> Self {
-        let mut result = [0u8; 32];
-        for (i, byte) in result.iter_mut().enumerate() {
-            *byte = !self.0[i];
-        }
-        Self(result)
+        todo_exercise!("Exercise 1.2 — bitwise NOT each byte")
     }
 }
 
 // --- Conversions ---
 
 impl From<u64> for U256 {
-    fn from(val: u64) -> Self {
-        let mut bytes = [0u8; 32];
-        bytes[24..32].copy_from_slice(&val.to_be_bytes());
-        Self(bytes)
+    fn from(_val: u64) -> Self {
+        todo_exercise!("Exercise 1.4 — place 8 big-endian bytes into positions 24..32")
     }
 }
 
 impl From<u128> for U256 {
-    fn from(val: u128) -> Self {
-        let mut bytes = [0u8; 32];
-        bytes[16..32].copy_from_slice(&val.to_be_bytes());
-        Self(bytes)
+    fn from(_val: u128) -> Self {
+        todo_exercise!("Exercise 1.4 — place 16 big-endian bytes into positions 16..32")
     }
 }
 
@@ -287,8 +166,7 @@ impl PartialOrd for U256 {
 
 impl Ord for U256 {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        // Big-endian comparison: compare from most significant byte.
-        self.0.cmp(&other.0)
+        todo_exercise!("Exercise 1.3 — big-endian comparison: compare from MSB to LSB")
     }
 }
 
@@ -297,7 +175,6 @@ impl Ord for U256 {
 impl std::fmt::Display for U256 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "0x")?;
-        // Skip leading zeros for readability.
         let mut leading = true;
         for byte in &self.0 {
             if leading && *byte == 0 {
@@ -349,16 +226,14 @@ mod tests {
 
     #[test]
     fn ex_1_2_add_overflow_wraps() {
-        // MAX + 1 should wrap to 0.
         let result = U256::MAX + U256::ONE;
         assert_eq!(result, U256::ZERO);
     }
 
     #[test]
     fn ex_1_2_add_large_values() {
-        // 2^255 + 2^255 = 2^256 which wraps to 0.
         let mut half = [0u8; 32];
-        half[0] = 0x80; // 2^255
+        half[0] = 0x80;
         let a = U256::from_bytes(half);
         assert_eq!(a + a, U256::ZERO);
     }
@@ -398,7 +273,6 @@ mod tests {
     fn ex_1_4_from_u64() {
         let val = U256::from(0xDEAD_BEEFu64);
         let bytes = val.to_bytes();
-        // Big-endian: value is in the last 4 bytes.
         assert_eq!(bytes[28], 0xDE);
         assert_eq!(bytes[29], 0xAD);
         assert_eq!(bytes[30], 0xBE);
@@ -447,7 +321,6 @@ mod tests {
 
     #[test]
     fn sub_underflow_wraps() {
-        // 0 - 1 should wrap to MAX.
         assert_eq!(U256::ZERO - U256::ONE, U256::MAX);
     }
 
@@ -460,7 +333,6 @@ mod tests {
 
     #[test]
     fn mul_overflow_wraps() {
-        // MAX * 2 = MAX + MAX = (2^256 - 1)*2 = 2^257 - 2, mod 2^256 = 2^256 - 2 = MAX - 1
         let result = U256::MAX * U256::from(2u64);
         assert_eq!(result, U256::MAX - U256::ONE);
     }
@@ -474,7 +346,6 @@ mod tests {
 
     #[test]
     fn div_by_zero_returns_zero() {
-        // EVM convention: division by zero yields zero.
         assert_eq!(U256::from(5u64).checked_div(U256::ZERO), U256::ZERO);
     }
 
