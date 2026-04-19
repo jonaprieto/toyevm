@@ -1,5 +1,20 @@
 # Exercises — Day 1
 
+```admonish example title="Exercise Setup" collapsible=true
+**Start from the stub branch:**
+
+    git checkout day-1-start
+    git checkout -b my-day-1
+
+The files [`src/types/u256.rs`](https://github.com/jonaprieto/toyevm/blob/day-1-start/src/types/u256.rs), [`src/stack.rs`](https://github.com/jonaprieto/toyevm/blob/day-1-start/src/stack.rs), and [`src/memory.rs`](https://github.com/jonaprieto/toyevm/blob/day-1-start/src/memory.rs) contain stubs with `todo_exercise!()` bodies and all tests intact.
+
+    cargo test    # 33 tests fail with "Exercise not yet implemented"
+
+Implement until all 37 tests pass, then compare:
+
+    git diff day-1 -- src/types src/stack.rs src/memory.rs
+```
+
 These exercises lock in the primitives you have just read about: `U256`, `Stack`,
 and `Memory`. For each exercise you will write or verify a small piece of code,
 run a focused test suite, and encounter a Rust pattern that you will see

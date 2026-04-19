@@ -1,5 +1,19 @@
 # Exercises — Day 5
 
+```admonish example title="Exercise Setup" collapsible=true
+    git checkout -b my-day-5 my-day-4
+
+Create stub file:
+
+- `src/call.rs` — `CallFrame`, `CallType`, `gas_to_forward()`
+
+Add `pub mod call;` to `src/lib.rs`.
+
+Peek: `git show day-5:src/call.rs | head -130`
+
+Compare: `git diff day-5 -- src/call.rs`
+```
+
 These exercises cover call frame construction, the depth limit, and the 63/64 gas-forwarding rule (EIP-150).
 
 ## 63/64 Rule (reference)

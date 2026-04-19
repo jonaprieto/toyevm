@@ -1,5 +1,22 @@
 # Exercises — Day 3
 
+```admonish example title="Exercise Setup" collapsible=true
+    git checkout -b my-day-3 my-day-2
+
+Create stub files with `todo_exercise!()` bodies:
+
+- `src/storage.rs` — `Storage` struct with `load()`, `store()`, `sload_gas()`
+- `src/context.rs` — `Address`, `ExecutionContext`, `ContextBuilder`
+
+Add `pub mod storage; pub mod context;` to `src/lib.rs`.
+
+Extend `src/interpreter.rs` with new opcode match arms (SLOAD, SSTORE, CALLDATALOAD, etc.) — use `todo_exercise!()` in each arm initially.
+
+Peek at signatures: `git show day-3:src/storage.rs | head -100`
+
+Compare when done: `git diff day-3 -- src/storage.rs src/context.rs src/interpreter.rs`
+```
+
 Day 3 covers persistent storage, memory-expansion gas, control flow, and the
 execution environment passed into a call. These exercises are longer than Day 1
 and Day 2: several require assembling multi-opcode bytecode sequences by hand.

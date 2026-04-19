@@ -1,5 +1,27 @@
 # Exercises — Day 2
 
+```admonish example title="Exercise Setup" collapsible=true
+**Create your working branch:**
+
+    git checkout -b my-day-2 my-day-1    # branch from your completed Day 1
+
+**Create stub files** — copy the type definitions and method signatures from the reference, replacing every function body with `todo_exercise!()`:
+
+- `src/opcode.rs` — the `Opcode` enum with `from_byte()` and `immediate_size()`
+- `src/gas.rs` — gas cost constants and `memory_gas_cost()` / `memory_expansion_cost()`
+- `src/interpreter.rs` — the `Interpreter` struct and `run()` method
+
+Add `pub mod opcode; pub mod gas; pub mod interpreter;` to `src/lib.rs`.
+
+You can peek at the reference signatures with:
+
+    git show day-2:src/opcode.rs | head -160
+
+Then implement until all tests pass and compare:
+
+    git diff day-2 -- src/opcode.rs src/gas.rs src/interpreter.rs
+```
+
 Day 2 introduced the fetch-decode-execute loop: how raw bytes become `Opcode`
 variants, how each opcode manipulates the stack, and how gas is consumed. These
 exercises walk the full pipeline from bytecode bytes to execution results.

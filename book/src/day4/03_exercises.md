@@ -1,5 +1,20 @@
 # Exercises — Day 4
 
+```admonish example title="Exercise Setup" collapsible=true
+    git checkout -b my-day-4 my-day-3
+
+Create stub files:
+
+- `src/contract.rs` — `create_address()`, `create2_address()`, RLP helpers
+- `src/host.rs` — `Host` trait, `LogEntry`, `MockHost`
+
+Add `pub mod contract; pub mod host;` to `src/lib.rs`.
+
+Peek at signatures: `git show day-4:src/host.rs | head -50`
+
+Compare when done: `git diff day-4 -- src/contract.rs src/host.rs`
+```
+
 These exercises cover contract creation address derivation, the Host trait, and LOG opcode gas accounting.
 
 ## Host Trait (reference)

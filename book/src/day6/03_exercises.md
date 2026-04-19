@@ -1,5 +1,24 @@
 # Exercises — Day 6
 
+```admonish example title="Exercise Setup" collapsible=true
+    git checkout -b my-day-6 my-day-5
+
+Create the compiler module:
+
+    mkdir -p src/compiler
+
+- `src/compiler/mod.rs` — `pub mod ir; pub mod cfg; pub mod analysis;`
+- `src/compiler/ir.rs` — `BlockId`, `Instruction`, `BasicBlock`
+- `src/compiler/cfg.rs` — `Cfg`, `find_leaders()`, edge computation
+- `src/compiler/analysis.rs` — `compute_stack_heights()`, `compute_use_def()`, `compute_liveness()`
+
+Add `pub mod compiler;` to `src/lib.rs`.
+
+Peek: `git show day-6:src/compiler/cfg.rs | head -100`
+
+Compare: `git diff day-6 -- src/compiler/`
+```
+
 These exercises build the control flow graph (CFG) step by step: identify leaders, extract blocks, add edges, and run dataflow analyses.
 
 ---

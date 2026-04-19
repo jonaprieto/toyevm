@@ -1,5 +1,20 @@
 # Exercises — Day 7
 
+```admonish example title="Exercise Setup" collapsible=true
+    git checkout -b my-day-7 my-day-6
+
+Create optimization pass files:
+
+- `src/compiler/fold.rs` — `OptimizationPass` trait, `ConstantFold`, `run_to_fixed_point()`
+- `src/compiler/dce.rs` — `DeadCodeElim`
+
+Add `pub mod fold; pub mod dce;` to `src/compiler/mod.rs`.
+
+Peek: `git show day-7:src/compiler/fold.rs | head -50`
+
+Compare: `git diff day-7 -- src/compiler/fold.rs src/compiler/dce.rs`
+```
+
 These exercises implement constant folding and dead code elimination (DCE) as composable optimization passes over the CFG from Day 6.
 
 ## OptimizationPass trait (reference)

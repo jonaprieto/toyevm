@@ -17,24 +17,23 @@ git clone https://github.com/jonaprieto/toyevm.git
 cd toyevm
 ```
 
-### 2. Check out the first day
+### 2. Start Day 1 — the exercise branch
 
-Each day lives on its own branch. Start with Day 1:
+The `day-1-start` branch has the project structure with **stub files** — all type definitions and method signatures are in place, but every function body is `todo_exercise!()`. Your job is to implement them.
 
 ```bash
-git checkout day-1
+git checkout day-1-start
+git checkout -b my-day-1       # your personal working branch
 ```
 
 ### 3. Look at the project structure
-
-After checking out `day-1`, you'll see:
 
 ```
 toyevm/
 ├── Cargo.toml          ← Rust project manifest (lib + binary)
 ├── src/
-│   ├── lib.rs          ← crate root — declares modules
-│   ├── main.rs         ← binary entry point (just prints a message)
+│   ├── lib.rs          ← crate root — declares modules + todo_exercise! macro
+│   ├── main.rs         ← binary entry point
 │   ├── types/
 │   │   ├── mod.rs      ← re-exports U256
 │   │   └── u256.rs     ← ★ Exercise 1.1–1.4: implement U256 type
@@ -43,7 +42,15 @@ toyevm/
 └── book/               ← this book (mdBook source)
 ```
 
-The files marked with ★ are where you write code. Each contains `#[cfg(test)]` blocks with tests — your goal is to make them pass.
+The files marked with ★ contain stubs like this:
+
+```rust
+pub fn wrapping_add(self, _rhs: Self) -> Self {
+    todo_exercise!("Exercise 1.2 — add byte-by-byte from LSB to MSB, propagating carry")
+}
+```
+
+Each stub has the correct signature — your job is to replace `todo_exercise!(...)` with a real implementation.
 
 ### 4. Run the tests
 
@@ -51,35 +58,61 @@ The files marked with ★ are where you write code. Each contains `#[cfg(test)]`
 cargo test
 ```
 
-You'll see output like:
+You'll see 33 failing tests, each with a hint:
 
 ```
-running 37 tests
-test types::u256::tests::ex_1_1_zero_is_all_zeros ... ok
-test types::u256::tests::ex_1_2_simple_add ... ok
-test stack::tests::ex_1_5_push_and_pop_lifo ... ok
-...
-test result: ok. 37 passed; 0 failed; 0 ignored
+---- types::u256::tests::ex_1_2_simple_add ----
+thread panicked at 'Exercise not yet implemented.
+  Hint: Exercise 1.2 — add byte-by-byte from LSB to MSB, propagating carry'
+
+test result: FAILED. 4 passed; 33 failed; 0 ignored
 ```
 
-On `day-1`, all tests already pass — the implementations are provided as reference. To practice, you can:
+Implement until all 37 tests pass.
 
-- **Read the code** to understand how each type is built
-- **Delete a function body** and rewrite it yourself, then run `cargo test` to verify
-- **Add your own tests** to explore edge cases
+### 5. Compare your solution to the reference
 
-### 5. Advance to the next day
+Once your tests pass, see how your implementation compares to ours:
 
 ```bash
-git checkout day-2
-cargo test          # new tests appear for the interpreter
+git diff day-1 -- src/
 ```
 
-Each branch builds on the previous one. New modules and tests are added, and existing code grows.
+This shows the exact differences between your code and the reference solution. You might find a more elegant approach — or discover edge cases you hadn't considered.
+
+```admonish tip title="Reading the reference without diffing"
+If you want to peek at the full reference solution at any point:
+`git show day-1:src/types/u256.rs` (shows the file without switching branches)
+```
+
+### 6. Advance to the next day
+
+```bash
+git checkout -b my-day-2 my-day-1    # branch from your completed Day 1
+```
+
+For Days 2–7, the exercise chapter in this book provides stub code to paste into new files. The pattern is always:
+
+1. Create the stub files shown in the "Exercise Setup" section
+2. `cargo test` — new tests fail
+3. Implement until they pass
+4. `git diff day-N -- src/` — compare to reference
 
 ```admonish tip title="How the branches work"
-The branches are *stacked*: `day-2` contains everything from `day-1` plus new code. You don't merge — you just check out the next branch. Think of each branch as a snapshot of the project at the end of that day.
+Solution branches `day-1` through `day-7` are *stacked snapshots* — each contains everything from prior days plus new code. Your personal `my-day-N` branches grow incrementally as you add modules. Use `git diff day-N` to compare any day.
 ```
+
+## Comparing your work — quick reference
+
+| Day | After completing | Compare with |
+|-----|-----------------|--------------|
+| 1 | all 37 tests pass | `git diff day-1 -- src/types src/stack.rs src/memory.rs` |
+| 2 | all tests pass | `git diff day-2 -- src/opcode.rs src/gas.rs src/interpreter.rs` |
+| 3 | all tests pass | `git diff day-3 -- src/storage.rs src/context.rs src/interpreter.rs` |
+| 4 | all tests pass | `git diff day-4 -- src/contract.rs src/host.rs` |
+| 5 | all tests pass | `git diff day-5 -- src/call.rs` |
+| 6 | all tests pass | `git diff day-6 -- src/compiler/` |
+| 7 | all tests pass | `git diff day-7 -- src/compiler/fold.rs src/compiler/dce.rs` |
 
 ## How each day works
 
