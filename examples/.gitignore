@@ -1,0 +1,6 @@
+# Foundry build artifacts
+/out/
+/cache/
+
+# Dependencies (can be restored with forge install)
+/lib/
