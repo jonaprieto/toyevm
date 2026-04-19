@@ -541,8 +541,8 @@ impl Interpreter {
                 }
 
                 Opcode::BLOCKHASH => {
-                    self.stack.pop()?; // block number argument
-                    // Simplified: return zero
+                    // Simplified: consume block number, return zero
+                    self.stack.pop()?;
                     self.stack.push(U256::ZERO)?;
                     self.pc += 1;
                 }
