@@ -31,3 +31,8 @@
 
 - [The Call Stack](./day5/01_call_stack.md)
 - [Interview Corner](./day5/02_interview_corner.md)
+
+# Day 6 — From Bytecode to IR
+
+- [Control Flow Graphs](./day6/01_cfg.md)
+- [Interview Corner](./day6/02_interview_corner.md)
