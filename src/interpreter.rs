@@ -1,7 +1,9 @@
+use crate::context::{Address, ExecutionContext};
 use crate::gas;
 use crate::memory::Memory;
 use crate::opcode::Opcode;
 use crate::stack::{Stack, StackError};
+use crate::storage::Storage;
 use crate::types::U256;
 
 /// The result of a successful execution.
@@ -60,6 +62,10 @@ pub struct Interpreter {
     stack: Stack,
     /// Linear memory.
     memory: Memory,
+    /// Persistent storage.
+    storage: Storage,
+    /// Execution context (caller, calldata, block info, etc.).
+    context: ExecutionContext,
     /// Gas remaining.
     gas_remaining: u64,
     /// Gas consumed so far.
@@ -77,10 +83,38 @@ impl Interpreter {
             pc: 0,
             stack: Stack::new(),
             memory: Memory::new(),
+            storage: Storage::new(),
+            context: ExecutionContext::default(),
             gas_remaining: gas_limit,
             gas_used: 0,
             valid_jumpdests,
         }
+    }
+
+    /// Create a new interpreter with a specific execution context and storage.
+    pub fn with_context(
+        bytecode: Vec<u8>,
+        gas_limit: u64,
+        context: ExecutionContext,
+        storage: Storage,
+    ) -> Self {
+        let valid_jumpdests = Self::compute_jumpdests(&bytecode);
+        Self {
+            bytecode,
+            pc: 0,
+            stack: Stack::new(),
+            memory: Memory::new(),
+            storage,
+            context,
+            gas_remaining: gas_limit,
+            gas_used: 0,
+            valid_jumpdests,
+        }
+    }
+
+    /// Get a reference to the storage (for inspection after execution).
+    pub fn storage(&self) -> &Storage {
+        &self.storage
     }
 
     /// Precompute the set of valid JUMPDEST positions.
@@ -360,6 +394,180 @@ impl Interpreter {
                     self.pc += 1;
                 }
 
+                Opcode::SLOAD => {
+                    let key = self.stack.pop()?;
+                    let gas_cost = self.storage.sload_gas(&key);
+                    self.use_gas(gas_cost)?;
+                    let (value, _cold) = self.storage.load(key);
+                    self.stack.push(value)?;
+                    self.pc += 1;
+                }
+
+                Opcode::SSTORE => {
+                    let key = self.stack.pop()?;
+                    let value = self.stack.pop()?;
+                    let gas_cost = self.storage.sstore_gas(&key);
+                    self.use_gas(gas_cost)?;
+                    self.storage.store(key, value);
+                    self.pc += 1;
+                }
+
+                Opcode::KECCAK256 => {
+                    let offset = self.stack.pop()?;
+                    let size = self.stack.pop()?;
+                    let offset = offset.to_usize().ok_or(EvmError::OutOfGas)?;
+                    let size = size.to_usize().ok_or(EvmError::OutOfGas)?;
+                    if size > 0 {
+                        self.charge_memory_expansion(offset, size)?;
+                    }
+                    // Simplified: return zero hash (proper keccak not implemented yet)
+                    self.stack.push(U256::ZERO)?;
+                    self.pc += 1;
+                }
+
+                Opcode::ADDRESS => {
+                    let addr = self.context.address;
+                    self.stack.push(Self::address_to_u256(addr))?;
+                    self.pc += 1;
+                }
+
+                Opcode::BALANCE | Opcode::SELFBALANCE => {
+                    if matches!(opcode, Opcode::BALANCE) {
+                        self.stack.pop()?; // consume address argument
+                    }
+                    // Simplified: return 0 balance
+                    self.stack.push(U256::ZERO)?;
+                    self.pc += 1;
+                }
+
+                Opcode::ORIGIN => {
+                    let addr = self.context.origin;
+                    self.stack.push(Self::address_to_u256(addr))?;
+                    self.pc += 1;
+                }
+
+                Opcode::CALLER => {
+                    let addr = self.context.caller;
+                    self.stack.push(Self::address_to_u256(addr))?;
+                    self.pc += 1;
+                }
+
+                Opcode::CALLVALUE => {
+                    self.stack.push(self.context.call_value)?;
+                    self.pc += 1;
+                }
+
+                Opcode::CALLDATALOAD => {
+                    let offset = self.stack.pop()?;
+                    let offset = offset.to_usize().unwrap_or(usize::MAX);
+                    let mut bytes = [0u8; 32];
+                    for (i, byte) in bytes.iter_mut().enumerate() {
+                        let idx = offset.saturating_add(i);
+                        if idx < self.context.calldata.len() {
+                            *byte = self.context.calldata[idx];
+                        }
+                        // else: zero-padded (already 0)
+                    }
+                    self.stack.push(U256::from_bytes(bytes))?;
+                    self.pc += 1;
+                }
+
+                Opcode::CALLDATASIZE => {
+                    self.stack
+                        .push(U256::from(self.context.calldata.len() as u64))?;
+                    self.pc += 1;
+                }
+
+                Opcode::CALLDATACOPY => {
+                    let dest_offset = self.stack.pop()?;
+                    let data_offset = self.stack.pop()?;
+                    let size = self.stack.pop()?;
+                    let dest = dest_offset.to_usize().ok_or(EvmError::OutOfGas)?;
+                    let src = data_offset.to_usize().unwrap_or(usize::MAX);
+                    let len = size.to_usize().ok_or(EvmError::OutOfGas)?;
+                    if len > 0 {
+                        self.charge_memory_expansion(dest, len)?;
+                        let mut data = vec![0u8; len];
+                        for (i, byte) in data.iter_mut().enumerate() {
+                            let idx = src.saturating_add(i);
+                            if idx < self.context.calldata.len() {
+                                *byte = self.context.calldata[idx];
+                            }
+                        }
+                        self.memory.write_slice(dest, &data);
+                    }
+                    self.pc += 1;
+                }
+
+                Opcode::CODESIZE => {
+                    self.stack.push(U256::from(self.bytecode.len() as u64))?;
+                    self.pc += 1;
+                }
+
+                Opcode::CODECOPY => {
+                    let dest_offset = self.stack.pop()?;
+                    let code_offset = self.stack.pop()?;
+                    let size = self.stack.pop()?;
+                    let dest = dest_offset.to_usize().ok_or(EvmError::OutOfGas)?;
+                    let src = code_offset.to_usize().unwrap_or(usize::MAX);
+                    let len = size.to_usize().ok_or(EvmError::OutOfGas)?;
+                    if len > 0 {
+                        self.charge_memory_expansion(dest, len)?;
+                        let mut data = vec![0u8; len];
+                        for (i, byte) in data.iter_mut().enumerate() {
+                            let idx = src.saturating_add(i);
+                            if idx < self.bytecode.len() {
+                                *byte = self.bytecode[idx];
+                            }
+                        }
+                        self.memory.write_slice(dest, &data);
+                    }
+                    self.pc += 1;
+                }
+
+                Opcode::GASPRICE => {
+                    self.stack.push(self.context.gas_price)?;
+                    self.pc += 1;
+                }
+
+                Opcode::BLOCKHASH => {
+                    self.stack.pop()?; // block number argument
+                    // Simplified: return zero
+                    self.stack.push(U256::ZERO)?;
+                    self.pc += 1;
+                }
+
+                Opcode::COINBASE => {
+                    let addr = self.context.block_coinbase;
+                    self.stack.push(Self::address_to_u256(addr))?;
+                    self.pc += 1;
+                }
+
+                Opcode::TIMESTAMP => {
+                    self.stack.push(self.context.block_timestamp)?;
+                    self.pc += 1;
+                }
+
+                Opcode::NUMBER => {
+                    self.stack.push(self.context.block_number)?;
+                    self.pc += 1;
+                }
+
+                Opcode::DIFFICULTY => {
+                    self.stack.push(self.context.block_difficulty)?;
+                    self.pc += 1;
+                }
+
+                Opcode::GASLIMIT => {
+                    self.stack.push(self.context.block_gaslimit)?;
+                    self.pc += 1;
+                }
+
+                Opcode::CHAINID => {
+                    self.stack.push(self.context.chain_id)?;
+                    self.pc += 1;
+                }
+
                 Opcode::JUMP => {
                     let dest = self.stack.pop()?;
                     let dest = dest.to_usize().ok_or(EvmError::InvalidJump)?;
@@ -540,6 +748,13 @@ impl Interpreter {
         }
     }
 
+    /// Convert a 20-byte address to a U256 (right-aligned).
+    fn address_to_u256(addr: Address) -> U256 {
+        let mut bytes = [0u8; 32];
+        bytes[12..32].copy_from_slice(&addr.0);
+        U256::from_bytes(bytes)
+    }
+
     /// Deduct gas. Returns OutOfGas if insufficient.
     fn use_gas(&mut self, cost: u64) -> Result<(), EvmError> {
         if cost > self.gas_remaining {
@@ -668,6 +883,31 @@ impl Interpreter {
             Opcode::EXP => 10, // base cost, dynamic part not included here
 
             Opcode::MLOAD | Opcode::MSTORE | Opcode::MSTORE8 => gas::GAS_VERY_LOW,
+
+            // SLOAD/SSTORE gas is dynamic (cold/warm), charged separately in run()
+            Opcode::SLOAD | Opcode::SSTORE => gas::GAS_ZERO,
+
+            // Environmental info
+            Opcode::ADDRESS
+            | Opcode::ORIGIN
+            | Opcode::CALLER
+            | Opcode::CALLVALUE
+            | Opcode::CALLDATASIZE
+            | Opcode::CODESIZE
+            | Opcode::GASPRICE
+            | Opcode::COINBASE
+            | Opcode::TIMESTAMP
+            | Opcode::NUMBER
+            | Opcode::DIFFICULTY
+            | Opcode::GASLIMIT
+            | Opcode::CHAINID
+            | Opcode::SELFBALANCE => gas::GAS_BASE,
+
+            Opcode::CALLDATALOAD => gas::GAS_VERY_LOW,
+            Opcode::CALLDATACOPY | Opcode::CODECOPY => gas::GAS_VERY_LOW,
+            Opcode::BALANCE => 100, // warm access cost (simplified)
+            Opcode::BLOCKHASH => 20,
+            Opcode::KECCAK256 => 30, // base cost, dynamic part not included here
 
             Opcode::RETURN | Opcode::REVERT => gas::GAS_ZERO,
 
@@ -981,5 +1221,264 @@ mod tests {
         ];
         let result = run_bytecode(&bytecode, ENOUGH_GAS).unwrap();
         assert_eq!(result.output[31], 16);
+    }
+
+    // ---------------------------------------------------------------
+    // Exercise 3.1: MLOAD/MSTORE round-trip via interpreter
+    // ---------------------------------------------------------------
+    #[test]
+    fn ex_3_1_mload_mstore_roundtrip() {
+        // PUSH1 0xAB, PUSH1 0, MSTORE, PUSH1 0, MLOAD, PUSH1 0, MSTORE, RETURN 32
+        let bytecode = vec![
+            0x60, 0xAB, // PUSH1 0xAB
+            0x60, 0x00, // PUSH1 0
+            0x52, // MSTORE (stores 0xAB at mem[0..32])
+            0x60, 0x00, // PUSH1 0
+            0x51, // MLOAD (loads mem[0..32])
+            0x60, 0x00, // PUSH1 0
+            0x52, // MSTORE (store it back)
+            0x60, 0x20, // PUSH1 32
+            0x60, 0x00, // PUSH1 0
+            0xF3, // RETURN
+        ];
+        let result = run_bytecode(&bytecode, ENOUGH_GAS).unwrap();
+        assert_eq!(result.output[31], 0xAB);
+    }
+
+    // ---------------------------------------------------------------
+    // Exercise 3.2: Memory expansion gas
+    // ---------------------------------------------------------------
+    #[test]
+    fn ex_3_2_memory_expansion_gas() {
+        // Store at offset 0 (expands to 1 word = 3 gas expansion)
+        let small = vec![
+            0x60, 0x01, // PUSH1 1
+            0x60, 0x00, // PUSH1 0
+            0x52, // MSTORE
+            0x00, // STOP
+        ];
+        let r1 = run_bytecode(&small, ENOUGH_GAS).unwrap();
+
+        // Store at offset 992 (expands to 32 words)
+        let large = vec![
+            0x60, 0x01, // PUSH1 1
+            0x61, 0x03, 0xE0, // PUSH2 992
+            0x52, // MSTORE
+            0x00, // STOP
+        ];
+        let r2 = run_bytecode(&large, ENOUGH_GAS).unwrap();
+
+        // Large offset should cost more gas due to memory expansion.
+        assert!(r2.gas_used > r1.gas_used);
+    }
+
+    // ---------------------------------------------------------------
+    // Exercise 3.5: JUMPDEST validation
+    // ---------------------------------------------------------------
+    #[test]
+    fn ex_3_5_invalid_jump_target() {
+        // PUSH1 0x02, JUMP — byte at offset 2 is the PUSH1 immediate, not JUMPDEST
+        let bytecode = vec![
+            0x60, 0x04, // PUSH1 4 (jump to offset 4)
+            0x56, // JUMP
+            0x00, // STOP (offset 3)
+            0x60, 0x01, // PUSH1 1 (offset 4 — not a JUMPDEST!)
+        ];
+        let err = run_bytecode(&bytecode, ENOUGH_GAS).unwrap_err();
+        assert_eq!(err, EvmError::InvalidJump);
+    }
+
+    // ---------------------------------------------------------------
+    // Exercise 3.6: JUMP opcode
+    // ---------------------------------------------------------------
+    #[test]
+    fn ex_3_6_jump() {
+        // PUSH1 4, JUMP, INVALID, JUMPDEST, STOP
+        let bytecode = vec![
+            0x60, 0x04, // PUSH1 4
+            0x56, // JUMP
+            0xFE, // INVALID (should be skipped)
+            0x5B, // JUMPDEST (offset 4)
+            0x00, // STOP
+        ];
+        let result = run_bytecode(&bytecode, ENOUGH_GAS).unwrap();
+        assert!(result.output.is_empty()); // reached STOP normally
+    }
+
+    // ---------------------------------------------------------------
+    // Exercise 3.7: JUMPI true branch
+    // ---------------------------------------------------------------
+    #[test]
+    fn ex_3_7_jumpi_true() {
+        // PUSH1 1 (condition=true), PUSH1 7, JUMPI, INVALID, ..., JUMPDEST, STOP
+        let bytecode = vec![
+            0x60, 0x01, // PUSH1 1 (nonzero = true)
+            0x60, 0x07, // PUSH1 7 (dest)
+            0x57, // JUMPI
+            0xFE, // INVALID (skipped)
+            0xFE, // INVALID (skipped)
+            0x5B, // JUMPDEST (offset 7)
+            0x00, // STOP
+        ];
+        let result = run_bytecode(&bytecode, ENOUGH_GAS).unwrap();
+        assert!(result.output.is_empty());
+    }
+
+    // ---------------------------------------------------------------
+    // Exercise 3.8: JUMPI false branch
+    // ---------------------------------------------------------------
+    #[test]
+    fn ex_3_8_jumpi_false() {
+        // PUSH1 0 (condition=false), PUSH1 7, JUMPI, PUSH1 42, STOP, ...
+        let bytecode = vec![
+            0x60, 0x00, // PUSH1 0 (zero = false)
+            0x60, 0x07, // PUSH1 7 (dest — would jump here if true)
+            0x57, // JUMPI (falls through)
+            0x60, 0x2A, // PUSH1 42
+            0x00, // STOP (offset 7 doesn't matter since we don't jump)
+        ];
+        // Just check it doesn't error — it should stop normally.
+        let result = run_bytecode(&bytecode, ENOUGH_GAS).unwrap();
+        assert!(result.output.is_empty());
+    }
+
+    // ---------------------------------------------------------------
+    // Exercise 3.9: CALLDATALOAD
+    // ---------------------------------------------------------------
+    #[test]
+    fn ex_3_9_calldataload() {
+        use crate::context::ContextBuilder;
+
+        // Calldata: 32 bytes with 0xAB at position 0
+        let mut calldata = vec![0u8; 32];
+        calldata[0] = 0xAB;
+
+        let ctx = ContextBuilder::new().calldata(calldata).build();
+
+        // CALLDATALOAD at offset 0, MSTORE, RETURN 32 bytes
+        let bytecode = vec![
+            0x60, 0x00, // PUSH1 0
+            0x35, // CALLDATALOAD
+            0x60, 0x00, // PUSH1 0
+            0x52, // MSTORE
+            0x60, 0x20, // PUSH1 32
+            0x60, 0x00, // PUSH1 0
+            0xF3, // RETURN
+        ];
+
+        let mut interp = Interpreter::with_context(bytecode, ENOUGH_GAS, ctx, Storage::new());
+        let result = interp.run().unwrap();
+        assert_eq!(result.output[0], 0xAB);
+    }
+
+    // ---------------------------------------------------------------
+    // Exercise 3.10: Loop in bytecode
+    // ---------------------------------------------------------------
+    #[test]
+    fn ex_3_10_loop_in_bytecode() {
+        // Implement: i = 0; while (i < 5) { i++ }; return i
+        // This is a real bytecode loop using JUMP/JUMPI.
+        //
+        // Pseudocode:
+        // Bytecode layout (i = 0; while i < 5: i++; return i):
+        //
+        //  0: PUSH1 0       — i = 0
+        //  2: JUMPDEST       — loop_start
+        //  3: PUSH1 5        — push limit
+        //  5: DUP2           — copy i to top: stack = [..., i, 5, i]
+        //  6: LT             — pops a=i, b=5, pushes (i < 5)
+        //  7: PUSH1 18       — loop_body offset
+        //  9: JUMPI          — jump if i < 5
+        // 10: PUSH1 0        — offset for MSTORE
+        // 12: MSTORE         — store i at mem[0]
+        // 13: PUSH1 32       — return size
+        // 15: PUSH1 0        — return offset
+        // 17: RETURN
+        // 18: JUMPDEST       — loop_body
+        // 19: PUSH1 1
+        // 21: ADD             — i = i + 1
+        // 22: PUSH1 2        — loop_start offset
+        // 24: JUMP
+        let bytecode = vec![
+            0x60, 0x00, // 0: PUSH1 0
+            0x5B, // 2: JUMPDEST (loop_start)
+            0x60, 0x05, // 3: PUSH1 5
+            0x81, // 5: DUP2 (copy i)
+            0x10, // 6: LT (i < 5)
+            0x60, 0x12, // 7: PUSH1 18 (loop_body)
+            0x57, // 9: JUMPI
+            0x60, 0x00, // 10: PUSH1 0
+            0x52, // 12: MSTORE
+            0x60, 0x20, // 13: PUSH1 32
+            0x60, 0x00, // 15: PUSH1 0
+            0xF3, // 17: RETURN
+            0x5B, // 18: JUMPDEST (loop_body)
+            0x60, 0x01, // 19: PUSH1 1
+            0x01, // 21: ADD
+            0x60, 0x02, // 22: PUSH1 2 (loop_start)
+            0x56, // 24: JUMP
+        ];
+
+        let result = run_bytecode(&bytecode, ENOUGH_GAS).unwrap();
+        // After the loop, i = 5
+        assert_eq!(result.output[31], 5);
+    }
+
+    // ---------------------------------------------------------------
+    // Exercise 3.3/3.4: SSTORE/SLOAD via interpreter
+    // ---------------------------------------------------------------
+    #[test]
+    fn ex_3_3_sstore_sload_interpreter() {
+        // PUSH1 42, PUSH1 0, SSTORE — stores 42 at slot 0
+        // PUSH1 0, SLOAD — loads slot 0
+        // PUSH1 0, MSTORE, RETURN 32 bytes
+        let bytecode = vec![
+            0x60, 0x2A, // PUSH1 42
+            0x60, 0x00, // PUSH1 0 (slot)
+            0x55, // SSTORE
+            0x60, 0x00, // PUSH1 0 (slot)
+            0x54, // SLOAD
+            0x60, 0x00, // PUSH1 0
+            0x52, // MSTORE
+            0x60, 0x20, // PUSH1 32
+            0x60, 0x00, // PUSH1 0
+            0xF3, // RETURN
+        ];
+        let result = run_bytecode(&bytecode, ENOUGH_GAS).unwrap();
+        assert_eq!(result.output[31], 42);
+    }
+
+    #[test]
+    fn ex_3_4_cold_warm_sload_gas() {
+        // First SLOAD is cold (2100 gas), second SLOAD is warm (100 gas).
+        // We measure gas difference.
+        let bytecode_cold = vec![
+            0x60, 0x00, // PUSH1 0
+            0x54, // SLOAD (cold)
+            0x50, // POP
+            0x00, // STOP
+        ];
+        let r1 = run_bytecode(&bytecode_cold, ENOUGH_GAS).unwrap();
+
+        // Two SLOADs to the same slot
+        let bytecode_warm = vec![
+            0x60, 0x00, // PUSH1 0
+            0x54, // SLOAD (cold)
+            0x50, // POP
+            0x60, 0x00, // PUSH1 0
+            0x54, // SLOAD (warm)
+            0x50, // POP
+            0x00, // STOP
+        ];
+        let r2 = run_bytecode(&bytecode_warm, ENOUGH_GAS).unwrap();
+
+        // The gas difference between r2 and r1 should be approximately:
+        // PUSH1(3) + SLOAD_warm(100) + POP(2) = 105
+        // (not SLOAD_cold(2100))
+        let diff = r2.gas_used - r1.gas_used;
+        assert!(
+            diff < 200,
+            "Second SLOAD should be warm (cheap), but gas diff was {diff}"
+        );
     }
 }
