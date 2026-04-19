@@ -20,13 +20,13 @@ Without gas, a contract could loop forever, and every Ethereum node would be stu
 | High | 10 | JUMPI |
 
 **Dynamic costs** depend on operand values:
-- **Memory expansion**: grows quadratically — `3 * words + words² / 512`
+- **Memory expansion**: grows quadratically — $C_{mem}(a) = 3a + \lfloor a^2 / 512 \rfloor$
 - **EXP**: base cost + 50 per byte in the exponent
 - **SLOAD/SSTORE**: cold vs. warm access (Day 3)
 
 ## The memory expansion formula
 
-Memory cost = `3 * words + words² / 512`
+$$C_{mem}(a) = 3a + \left\lfloor \frac{a^2}{512} \right\rfloor$$
 
 At small sizes, this is essentially linear (3 gas per 32-byte word). But the quadratic term kicks in at scale:
 
@@ -36,7 +36,7 @@ At small sizes, this is essentially linear (3 gas per 32-byte word). But the qua
 | 10 | 320 | 30 |
 | 100 | 3,200 | 319 |
 | 1000 | 32,000 | 4,953 |
-| 10000 | 320,000 | 225,781 |
+| 10000 | 320,000 | 225,312 |
 
 This makes large memory allocations prohibitively expensive — by design.
 
@@ -51,6 +51,10 @@ Both halt execution and discard state changes, but they differ in gas refunds:
 | Return data | Empty | Can include error message |
 
 This distinction matters for smart contract design: a well-written contract should `REVERT` with an error message rather than running out of gas silently.
+
+```admonish tip title="Rust Pattern: Result<T, E>"
+We model execution outcomes as `Result<ExecutionResult, EvmError>`. A successful `REVERT` returns `Ok(ExecutionResult { reverted: true, .. })` — it's not an `Err`, because the interpreter completed successfully; it's the *contract* that chose to revert.
+```
 
 ## Exercises
 

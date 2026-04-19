@@ -13,16 +13,20 @@ Uninitialized slots read as zero. Writing zero to a slot is equivalent to deleti
 
 ## Cold vs. Warm Access (EIP-2929)
 
-Before the Berlin upgrade (EIP-2929), SLOAD always cost 800 gas. This was a security problem — an attacker could read many storage slots cheaply, while the node had to perform expensive disk I/O for each.
+Before the Berlin upgrade (EIP-2929), SLOAD cost 800 gas (since the Istanbul upgrade / EIP-1884; earlier it was 200, and originally 50). This was a security problem — an attacker could read many storage slots cheaply, while the node had to perform expensive disk I/O for each.
 
 EIP-2929 introduced the **accessed storage keys** set:
 
 | Access type | SLOAD cost | Description |
 |------------|-----------|-------------|
-| **Cold** | 2100 gas | First access to a slot in this transaction |
-| **Warm** | 100 gas | Slot already accessed earlier in this transaction |
+| **Cold** | $G_{coldsload} = 2100$ | First access to a slot in this transaction |
+| **Warm** | $G_{warmaccess} = 100$ | Slot already accessed earlier in this transaction |
 
 The first time you touch a slot, the node must fetch it from disk (cold). After that, it's in memory (warm). The gas costs reflect this reality.
+
+```admonish danger title="EIP-2929: Breaking Change"
+EIP-2929 changed SLOAD costs by 26x (800 → 2100 for cold). Contracts that hardcoded gas assumptions (e.g., `.transfer()` with 2300 gas stipend) broke on mainnet. Always use the warm/cold model.
+```
 
 ```rust
 pub fn sload_gas(&self, key: &U256) -> u64 {

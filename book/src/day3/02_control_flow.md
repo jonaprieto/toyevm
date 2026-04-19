@@ -38,6 +38,10 @@ fn compute_jumpdests(bytecode: &[u8]) -> Vec<bool> {
 
 ## A loop in bytecode
 
+```admonish note title="DUP and SWAP Families"
+`DUP1`..`DUP16` duplicate the Nth stack element (counting from the top, 1-indexed) and push the copy. `SWAP1`..`SWAP16` swap the top element with the (N+1)th element. Both cost 3 gas ("very low" tier).
+```
+
 Here's how a Solidity `while (i < 5) { i++; }` compiles to bytecode:
 
 ```

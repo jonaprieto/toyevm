@@ -22,7 +22,7 @@ Cold SLOAD costs 2100 gas, warm costs 100 gas. This was introduced in EIP-2929 (
 
 **Q: How does memory expansion gas work?**
 
-Memory cost = `3 * words + words² / 512`, where `words` is the number of 32-byte words. The cost is the delta between the new total and the old total when memory expands. The linear term (3 gas/word) makes small allocations cheap. The quadratic term (words²/512) makes large allocations progressively expensive — 320 KB costs ~226,000 gas, making it impractical to allocate unbounded memory. This prevents DoS attacks where contracts allocate gigabytes on every node.
+Memory cost = `3 * words + words² / 512`, where `words` is the number of 32-byte words. The cost is the delta between the new total and the old total when memory expands. The linear term (3 gas/word) makes small allocations cheap. The quadratic term (words²/512) makes large allocations progressively expensive — 320 KB (10,000 words) costs ~225,312 gas, making it impractical to allocate unbounded memory. This prevents DoS attacks where contracts allocate gigabytes on every node.
 
 ---
 

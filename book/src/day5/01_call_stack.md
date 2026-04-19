@@ -17,6 +17,10 @@ The standard call. Creates a new context where `msg.sender` is the calling contr
 ### DELEGATECALL
 The foundation of the **proxy pattern**. The callee's code runs in the caller's storage context. `msg.sender` and `msg.value` are preserved from the original call. This is how upgradeable contracts work — the proxy's storage is modified by the implementation's logic.
 
+```admonish warning title="Pitfall: DELEGATECALL Storage Collisions"
+When Contract A DELEGATECALLs Contract B, B's code writes to A's storage slots. If A and B have different storage layouts, B will overwrite A's variables at the wrong slots. This is the most common proxy bug.
+```
+
 ### STATICCALL
 A read-only call. Any opcode that modifies state (`SSTORE`, `LOG`, `CREATE`, `CALL` with value) will revert the sub-call. Used for view functions and safe external reads.
 
@@ -25,6 +29,8 @@ A read-only call. Any opcode that modifies state (`SSTORE`, `LOG`, `CREATE`, `CA
 Before EIP-150, a contract could forward all its remaining gas to a sub-call. This enabled gas-exhaustion attacks: a malicious contract could create deeply nested calls, each consuming almost all gas, leaving the caller with nothing.
 
 EIP-150 limits forwarded gas to **63/64 of remaining gas**:
+
+$$G_{forward} = \min\left(G_{requested},\; G_{remaining} - \lfloor G_{remaining} / 64 \rfloor\right)$$
 
 ```rust
 let max_forward = gas_remaining - gas_remaining / 64;

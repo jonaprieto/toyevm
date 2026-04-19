@@ -6,11 +6,11 @@ Today we cross the boundary from a single-contract interpreter to a system that 
 
 When a contract creates another contract, the EVM needs to determine the new contract's address:
 
-**CREATE**: `address = keccak256(rlp([sender, nonce]))[12:]`
+**CREATE**: $\text{addr} = \text{keccak256}(\text{rlp}([\text{sender}, \text{nonce}]))[12{:}]$
 
 The address depends on the sender and their nonce (a counter that increments with each CREATE). This means the address is predictable only if you know the current nonce.
 
-**CREATE2**: `address = keccak256(0xff ++ sender ++ salt ++ keccak256(initcode))[12:]`
+**CREATE2**: $\text{addr} = \text{keccak256}(\texttt{0xff} \| \text{sender} \| \text{salt} \| \text{keccak256}(\text{initcode}))[12{:}]$
 
 CREATE2 (EIP-1014) adds a `salt` parameter, making the address deterministic — you can compute it before deployment. This enables:
 - **Factory patterns**: deploy contracts at known addresses
@@ -46,6 +46,10 @@ pub trait Host {
 
 For testing, `MockHost` implements this trait with HashMaps. In production, a real Host would read from a Merkle trie.
 
+```admonish tip title="Rust Pattern: Trait Objects"
+The `Host` trait enables *inversion of control*. The interpreter calls `host.code(addr)` without knowing whether it's backed by a HashMap (testing) or a Merkle trie (production). This is the same pattern `revm` uses.
+```
+
 ## LOG Opcodes
 
 LOG0 through LOG4 emit event logs with 0 to 4 indexed **topics** and arbitrary **data** bytes.
@@ -57,6 +61,7 @@ Gas cost: `375 + 8 * data_length + 375 * num_topics`
 | LOG0 | 0 | 375 + 256 = 631 |
 | LOG1 | 1 | 375 + 256 + 375 = 1006 |
 | LOG2 | 2 | 375 + 256 + 750 = 1381 |
+| LOG3 | 3 | 375 + 256 + 1125 = 1756 |
 | LOG4 | 4 | 375 + 256 + 1500 = 2131 |
 
 Logs are not accessible from within the EVM — they're write-only. Off-chain clients read them via the JSON-RPC `eth_getLogs` API.

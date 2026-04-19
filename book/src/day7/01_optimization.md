@@ -27,11 +27,15 @@ ADD        ; 3 gas
            ; total: 9 gas, 3 instructions
 ```
 
+Before: $3 + 3 + 3 = 9$ gas (3 instructions)
+
 **After:**
 ```
 PUSH32 8   ; 3 gas
            ; total: 3 gas, 1 instruction
 ```
+
+After: $3$ gas (1 instruction)
 
 This saves 6 gas per fold. Across a contract with many constant expressions, the savings accumulate.
 
@@ -74,6 +78,8 @@ Their benchmarks show 20x+ speedup over interpretation. The key insight: gas met
 
 ## JIT vs. AOT in blockchain context
 
+A **JIT compiler** compiles code on-the-fly during execution; an **AOT compiler** compiles before execution begins.
+
 | | JIT | AOT |
 |---|-----|-----|
 | Startup | Slow (compile on first call) | Slow (compile at deploy) |
@@ -82,6 +88,10 @@ Their benchmarks show 20x+ speedup over interpretation. The key insight: gas met
 | Cache | Must invalidate on upgrade | Stored with contract |
 
 Blockchain requires **deterministic execution** — every node must produce the same result. JIT is risky because different optimization levels could produce different gas measurements. AOT with a fixed compilation pipeline is safer.
+
+```admonish note title="Real-World Reference: evm_mlir"
+LambdaClass's `evm_mlir` achieves 20x+ speedup by compiling EVM bytecode through MLIR → LLVM → native code. Gas metering is compiled as a counter decrement at each basic block entry, replacing per-opcode checks.
+```
 
 ## Exercises
 

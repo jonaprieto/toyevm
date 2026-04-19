@@ -20,6 +20,10 @@ Ethereum chose 256-bit (32-byte) words for several reasons:
 - **Addresses** are 20 bytes — they fit comfortably in a 32-byte word.
 - **Cryptographic security**: 256-bit keys provide 128-bit security against brute-force attacks, which is the standard target for modern cryptography.
 
+```admonish tip title="Rust Pattern: Newtype"
+The newtype pattern (`struct U256([u8; 32])`) gives us type safety — you can't accidentally pass a raw byte array where a U256 is expected — plus a namespace for methods and operator overloading.
+```
+
 ## Yellow Paper notation
 
 The Ethereum Yellow Paper uses Greek letters for the machine state:
