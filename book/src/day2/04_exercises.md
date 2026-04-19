@@ -23,7 +23,7 @@ equivalent `from_byte` constructor) for several known opcodes and verify:
 - `0x60` → `Ok(Opcode::PUSH1)`
 - An unknown byte such as `0xEF` → `Err(…)` (invalid opcode)
 
-**File to edit:** `src/opcode.rs`
+**File:** [`src/opcode.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/opcode.rs)
 
 **How to verify:**
 
@@ -55,7 +55,7 @@ be `Option<Opcode>` or `Result<Opcode, InvalidOpcode>`.
 - `Opcode::PUSH32.immediate_size()` → `32`
 - `Opcode::ADD.immediate_size()` → `0` (no immediate bytes)
 
-**File to edit:** `src/opcode.rs`
+**File:** [`src/opcode.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/opcode.rs)
 
 **How to verify:**
 
@@ -90,7 +90,7 @@ STOP
 
 Assert that after execution the top of the stack is `U256::from(8u64)`.
 
-**File to edit:** `src/interpreter.rs` (add a test at the bottom)
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs) (add a test at the bottom)
 
 **How to verify:**
 
@@ -124,7 +124,7 @@ gas consumed:
 
 Assert that `result.gas_used` (or `gas_limit - remaining_gas`) equals `9`.
 
-**File to edit:** `src/interpreter.rs`
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
 **How to verify:**
 
@@ -154,7 +154,7 @@ Use `gas_limit - gas_remaining` if there is no `gas_used` field directly.
 
 Use `PUSH1` + the opcode + `STOP` for each test.
 
-**File to edit:** `src/interpreter.rs`
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
 **How to verify:**
 
@@ -183,7 +183,7 @@ to confirm operand order.
 any `n`. Write a test that executes `PUSH1 0x05`, `PUSH1 0x00`, `DIV`, `STOP`
 and asserts the top of the stack is `U256::ZERO`.
 
-**File to edit:** `src/interpreter.rs`
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
 **How to verify:**
 
@@ -216,7 +216,7 @@ implementation and add a zero-divisor guard.
 
 Write at least one test for each of `LT`, `GT`, and `EQ`.
 
-**File to edit:** `src/interpreter.rs`
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
 **How to verify:**
 
@@ -244,7 +244,7 @@ The sequence needs 9 gas; with only 1 available it should fail. Assert that
 execution returns an `Err` (or a halted result) indicating out-of-gas, and that
 the output is empty.
 
-**File to edit:** `src/interpreter.rs`
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
 **How to verify:**
 
@@ -278,7 +278,7 @@ a generous gas limit. Assert:
 - The output bytes are empty.
 - Zero gas was consumed.
 
-**File to edit:** `src/interpreter.rs`
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
 **How to verify:**
 
@@ -307,7 +307,7 @@ result and verify it is an empty `Vec<u8>` or slice.
 2. Executes `PUSH1 0x20`, `PUSH1 0x00`, `RETURN` to return the 32-byte word.
 3. Asserts the returned bytes match the stored value.
 
-**File to edit:** `src/interpreter.rs`
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
 **How to verify:**
 

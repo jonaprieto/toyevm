@@ -47,4 +47,10 @@ Where `I` is the execution environment (caller, value, bytecode, etc.). Given th
 
 ## What we'll build today
 
-Today we implement the three core data structures — `U256`, `Stack`, and `Memory` — without writing a single opcode. These are the substrate the interpreter will live in.
+Today we implement the three core data structures without writing a single opcode. These are the substrate the interpreter will live in:
+
+| Module | File | What it is |
+|--------|------|------------|
+| `U256` | [`src/types/u256.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/types/u256.rs) | 256-bit unsigned integer |
+| `Stack` | [`src/stack.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/stack.rs) | Bounded LIFO stack (max 1024) |
+| `Memory` | [`src/memory.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/memory.rs) | Byte-addressable linear memory |

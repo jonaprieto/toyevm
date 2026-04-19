@@ -18,7 +18,7 @@ bit patterns prescribed by the EVM: 32 zero bytes and 31 zero bytes followed by
 `0x01`, respectively. Add assertions in a unit test inside `src/types/u256.rs`
 that inspect the raw byte array returned by `to_bytes()`.
 
-**File to edit:** `src/types/u256.rs`
+**File:** [`src/types/u256.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/types/u256.rs)
 
 **How to verify:**
 
@@ -56,7 +56,7 @@ For `ONE`, only `bytes[31]` should be non-zero.
 1. `U256::from(2u64) + U256::from(3u64)` should equal `U256::from(5u64)`.
 2. `U256::MAX + U256::ONE` should equal `U256::ZERO` (overflow wraps to zero).
 
-**File to edit:** `src/types/u256.rs`
+**File:** [`src/types/u256.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/types/u256.rs)
 
 **How to verify:**
 
@@ -93,7 +93,7 @@ assertion fails — the 32-byte dump is the clearest debugging aid.
 - `U256::from(42u64) == U256::from(42u64)` is `true`.
 - `U256::from(1u64) != U256::from(2u64)` is `true`.
 
-**File to edit:** `src/types/u256.rs`
+**File:** [`src/types/u256.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/types/u256.rs)
 
 **How to verify:**
 
@@ -128,7 +128,7 @@ types into `U256`:
 
 Write one test function per conversion.
 
-**File to edit:** `src/types/u256.rs`
+**File:** [`src/types/u256.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/types/u256.rs)
 
 **How to verify:**
 
@@ -157,7 +157,7 @@ is a no-op — it just wraps the array.
 3. Pops them and checks that the order is LIFO (`3` first, then `2`, then `1`).
 4. Verifies that popping an empty stack returns `Err(StackError::Underflow)`.
 
-**File to edit:** `src/stack.rs`
+**File:** [`src/stack.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/stack.rs)
 
 **How to verify:**
 
@@ -190,7 +190,7 @@ message. For the underflow check, use `assert_eq!(stack.pop(), Err(StackError::U
 stack (all successes), then asserts that the 1025th push returns
 `Err(StackError::Overflow)`.
 
-**File to edit:** `src/stack.rs`
+**File:** [`src/stack.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/stack.rs)
 
 **How to verify:**
 
@@ -230,7 +230,7 @@ After the loop, do *not* call `unwrap()` on the 1025th push — match it or use
 3. Load a `U256` back from offset `0` and assert it equals the stored value.
 4. Repeat at offset `32` (the second word) to confirm non-overlapping writes.
 
-**File to edit:** `src/memory.rs`
+**File:** [`src/memory.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/memory.rs)
 
 **How to verify:**
 
@@ -261,7 +261,7 @@ check whether both stores triggered separate expansions.
 4. Assert that bytes `0..64` are all zero — the two words before the write were
    implicitly zero-initialised.
 
-**File to edit:** `src/memory.rs`
+**File:** [`src/memory.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/memory.rs)
 
 **How to verify:**
 

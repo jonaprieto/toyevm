@@ -28,7 +28,7 @@ STOP
 
 Assert that after execution the top of the stack equals the value you stored.
 
-**File to edit:** `src/interpreter.rs`
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
 **How to verify:**
 
@@ -63,7 +63,7 @@ Assert that the second execution consumes more gas than the first, and that the
 difference matches the memory expansion formula:
 `memory_cost = 3 * words + words² / 512`.
 
-**File to edit:** `src/interpreter.rs`
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
 **How to verify:**
 
@@ -104,7 +104,7 @@ STOP
 
 Assert the top of the stack equals `<value>`.
 
-**File to edit:** `src/interpreter.rs`
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
 **How to verify:**
 
@@ -135,7 +135,7 @@ slot within one execution context:
 
 Assert the gas consumed after each `SLOAD` using `gas_limit - remaining_gas`.
 
-**File to edit:** `src/interpreter.rs`
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
 **How to verify:**
 
@@ -175,7 +175,7 @@ readings, or use a sufficiently large gap between `gas_limit` checkpoints.
    not an actual `JUMPDEST`) — should return an error (`InvalidJumpDest` or
    similar).
 
-**File to edit:** `src/interpreter.rs`
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
 **How to verify:**
 
@@ -215,7 +215,7 @@ offset 6:  STOP
 Assert execution succeeds and that `U256::from(0xFFu64)` is **not** on the
 stack (proving the skipped instruction never ran).
 
-**File to edit:** `src/interpreter.rs`
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
 **How to verify:**
 
@@ -253,7 +253,7 @@ STOP
 
 Assert execution succeeds and `0xFF` is not on the stack.
 
-**File to edit:** `src/interpreter.rs`
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
 **How to verify:**
 
@@ -290,7 +290,7 @@ STOP
 
 Assert execution succeeds and `U256::from(0x42u64)` is on the top of the stack.
 
-**File to edit:** `src/interpreter.rs`
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
 **How to verify:**
 
@@ -327,7 +327,7 @@ STOP
 
 Assert the top of the stack equals `U256::from(0xBEEFu64)`.
 
-**File to edit:** `src/interpreter.rs`
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
 **How to verify:**
 
@@ -364,7 +364,7 @@ zero-padded.
 This is the hardest exercise in the book so far. Take it one step at a time:
 write out the intended bytecode in a comment, then encode the hex bytes.
 
-**File to edit:** `src/interpreter.rs`
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
 **How to verify:**
 
