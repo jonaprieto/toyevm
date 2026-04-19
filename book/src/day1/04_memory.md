@@ -26,6 +26,14 @@ Note that `MLOAD` and `MSTORE` always read/write exactly **32 bytes**, but the o
 A common mistake is assuming `MLOAD`/`MSTORE` require 32-byte-aligned offsets. They don't — `MLOAD(1)` reads bytes `[1, 33)`, overlapping two "words." This matters when reasoning about memory layout.
 ```
 
+## Memory layout visualization
+
+After `MSTORE(0x00, 42)` and `MSTORE(0x20, 7)`, memory looks like:
+
+![EVM memory layout](https://kroki.io/bytefield/svg/eNqNkEFLw0AQhe_-isf0koCBJRaRgAcPHqVgvYmHTXamCWy6YXdjE4r_3a1BbKEHT-_yvm8ekxkW1G4qDp2JLdYqv8mM14eicXbs90XL2rAPOFZW12wD3klNShFSlEusl7hX9PH1SycjSDwzeu4xRI9HqOkhNY9VGPQeJSrprAWtjDJKhC7R0Hgdmxap2_AVSIQT9gft9ADaOtuZLs6nm87PsHp2Y6QL8cv2bfP6DCcSOF5dI3IuPoc-tR0Z2V2Jeo4c8n_gP7ueJLLHIslO_7pdVDnl33HxdYE=)
+
+Each row is 32 bytes (one word). `MSTORE` writes a U256 value starting at the given byte offset.
+
 ## Yellow Paper Map
 
 In the Yellow Paper, memory is μ_m. The memory size function is:
