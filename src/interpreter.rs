@@ -1,5 +1,6 @@
 use crate::context::{Address, ExecutionContext};
 use crate::gas;
+use crate::host::LogEntry;
 use crate::memory::Memory;
 use crate::opcode::Opcode;
 use crate::stack::{Stack, StackError};
@@ -70,6 +71,8 @@ pub struct Interpreter {
     gas_remaining: u64,
     /// Gas consumed so far.
     gas_used: u64,
+    /// Emitted log entries.
+    logs: Vec<LogEntry>,
     /// Set of valid JUMPDEST offsets (precomputed).
     valid_jumpdests: Vec<bool>,
 }
@@ -87,6 +90,7 @@ impl Interpreter {
             context: ExecutionContext::default(),
             gas_remaining: gas_limit,
             gas_used: 0,
+            logs: Vec::new(),
             valid_jumpdests,
         }
     }
@@ -108,6 +112,7 @@ impl Interpreter {
             context,
             gas_remaining: gas_limit,
             gas_used: 0,
+            logs: Vec::new(),
             valid_jumpdests,
         }
     }
@@ -115,6 +120,11 @@ impl Interpreter {
     /// Get a reference to the storage (for inspection after execution).
     pub fn storage(&self) -> &Storage {
         &self.storage
+    }
+
+    /// Get the emitted log entries.
+    pub fn logs(&self) -> &[LogEntry] {
+        &self.logs
     }
 
     /// Precompute the set of valid JUMPDEST positions.
@@ -741,6 +751,36 @@ impl Interpreter {
                     });
                 }
 
+                Opcode::LOG0 | Opcode::LOG1 | Opcode::LOG2 | Opcode::LOG3 | Opcode::LOG4 => {
+                    let offset = self.stack.pop()?;
+                    let size = self.stack.pop()?;
+                    let num_topics = (opcode as u8 - Opcode::LOG0 as u8) as usize;
+
+                    let mut topics = Vec::with_capacity(num_topics);
+                    for _ in 0..num_topics {
+                        topics.push(self.stack.pop()?);
+                    }
+
+                    let offset = offset.to_usize().ok_or(EvmError::OutOfGas)?;
+                    let size = size.to_usize().ok_or(EvmError::OutOfGas)?;
+
+                    // LOG gas: 375 + 8 * data_size + 375 * num_topics
+                    let log_gas = 375 + 8 * size as u64 + 375 * num_topics as u64;
+                    self.use_gas(log_gas)?;
+
+                    if size > 0 {
+                        self.charge_memory_expansion(offset, size)?;
+                    }
+
+                    let data = self.memory.read_slice(offset, size);
+                    self.logs.push(LogEntry {
+                        address: self.context.address,
+                        topics,
+                        data,
+                    });
+                    self.pc += 1;
+                }
+
                 Opcode::INVALID => {
                     return Err(EvmError::InvalidOpcode(0xFE));
                 }
@@ -908,6 +948,11 @@ impl Interpreter {
             Opcode::BALANCE => 100, // warm access cost (simplified)
             Opcode::BLOCKHASH => 20,
             Opcode::KECCAK256 => 30, // base cost, dynamic part not included here
+
+            // LOG gas is dynamic, charged separately in run()
+            Opcode::LOG0 | Opcode::LOG1 | Opcode::LOG2 | Opcode::LOG3 | Opcode::LOG4 => {
+                gas::GAS_ZERO
+            }
 
             Opcode::RETURN | Opcode::REVERT => gas::GAS_ZERO,
 

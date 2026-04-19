@@ -147,6 +147,13 @@ pub enum Opcode {
     SWAP15 = 0x9E,
     SWAP16 = 0x9F,
 
+    // 0xA0-0xA4: Logging
+    LOG0 = 0xA0,
+    LOG1 = 0xA1,
+    LOG2 = 0xA2,
+    LOG3 = 0xA3,
+    LOG4 = 0xA4,
+
     // 0xF3, 0xFD: Return and Revert
     RETURN = 0xF3,
     REVERT = 0xFD,
@@ -303,6 +310,11 @@ impl Opcode {
                 ];
                 Some(swap_opcodes[(byte - 0x90) as usize])
             }
+            0xA0 => Some(Self::LOG0),
+            0xA1 => Some(Self::LOG1),
+            0xA2 => Some(Self::LOG2),
+            0xA3 => Some(Self::LOG3),
+            0xA4 => Some(Self::LOG4),
             0xF3 => Some(Self::RETURN),
             0xFD => Some(Self::REVERT),
             0xFE => Some(Self::INVALID),

@@ -11,7 +11,9 @@ macro_rules! todo_exercise {
 }
 
 pub mod context;
+pub mod contract;
 pub mod gas;
+pub mod host;
 pub mod interpreter;
 pub mod memory;
 pub mod opcode;
