@@ -38,7 +38,7 @@ that inspect the raw byte array returned by `to_bytes()`.
 **How to verify:**
 
 ```sh
-cargo test u256_constants
+cargo test ex_1_1
 ```
 
 **The struct and the constants look like this in our codebase:**
@@ -76,7 +76,7 @@ For `ONE`, only `bytes[31]` should be non-zero.
 **How to verify:**
 
 ```sh
-cargo test wrapping_add
+cargo test ex_1_2
 ```
 
 **The implementation you are testing:**
@@ -113,7 +113,7 @@ assertion fails — the 32-byte dump is the clearest debugging aid.
 **How to verify:**
 
 ```sh
-cargo test u256_comparison
+cargo test ex_1_3
 ```
 
 **Hint.** `U256` derives `PartialEq` and `Eq`. For ordering it implements
@@ -148,7 +148,7 @@ Write one test function per conversion.
 **How to verify:**
 
 ```sh
-cargo test u256_from
+cargo test ex_1_4
 ```
 
 **Hint.** Use `.to_bytes()` to inspect the result. For `u64::MAX`, bytes 24–31
@@ -177,7 +177,7 @@ is a no-op — it just wraps the array.
 **How to verify:**
 
 ```sh
-cargo test stack_lifo
+cargo test ex_1_5
 ```
 
 **The push and pop implementations:**
@@ -210,7 +210,7 @@ stack (all successes), then asserts that the 1025th push returns
 **How to verify:**
 
 ```sh
-cargo test stack_overflow
+cargo test ex_1_6
 ```
 
 **The `Stack` struct and error type:**
@@ -250,7 +250,7 @@ After the loop, do *not* call `unwrap()` on the 1025th push — match it or use
 **How to verify:**
 
 ```sh
-cargo test memory_roundtrip
+cargo test ex_1_7
 ```
 
 **Hint.** Look at the `store_word` and `load_word` methods in `memory.rs`. Both
@@ -281,7 +281,7 @@ check whether both stores triggered separate expansions.
 **How to verify:**
 
 ```sh
-cargo test memory_expansion
+cargo test ex_1_8
 ```
 
 **The expansion helper:**

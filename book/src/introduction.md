@@ -1,182 +1,72 @@
-# toyevm: Build an EVM from Scratch in Rust
+# ToyEVM: Build an EVM from Scratch in Rust
 
-Welcome to **toyevm**, a 7-day, exercise-driven tutorial that takes you from zero EVM knowledge to a deep understanding of EVM internals, gas mechanics, cross-contract calls, and optimization strategies.
+The best way to understand a virtual machine is to build one. This tutorial takes you from zero EVM knowledge to a working interpreter with a compiler backend — opcode by opcode, written entirely in Rust. No frameworks, no dependencies, no magic — just you, the Yellow Paper, and `cargo test`.
+
+The material is organized into seven days, each a few hours of focused work. You can spread it across a week or complete it in a single sitting — the pace is yours.
+
+## Why build an EVM?
+
+The EVM is the execution engine at the heart of Ethereum. Every smart contract, every DeFi protocol, every NFT mint — all of it compiles down to EVM bytecode and runs on this machine. Understanding the EVM deeply gives you an edge whether you are:
+
+- **A Rust developer** curious about blockchain internals — you will learn how a real production system (like [revm](https://github.com/bluealloy/revm)) works under the hood
+- **A smart contract developer** who wants to understand why gas costs are what they are, how storage actually works, and what DELEGATECALL really does
+- **A compiler engineer** interested in how bytecode analysis, CFG construction, and optimization passes apply to a stack machine
+- **A security researcher** who needs to reason about EVM semantics — reentrancy, storage collisions, jump destination validation — at the opcode level
+
+You don't need prior Ethereum or blockchain knowledge. If you can write basic Rust — ownership, traits, enums, pattern matching, `Result`/`Option` — you are ready.
+
+## What makes this tutorial different?
+
+This is not a reference manual. It is an **exercise-driven** tutorial inspired by [100 Exercises to Learn Rust](https://rust-exercises.com/). Every concept is followed by exercises where you implement the real thing: you write the U256 arithmetic, the stack, the interpreter loop, the gas metering, the storage model, the call stack, the CFG builder, the optimizer. All of it.
+
+Each day follows the same rhythm:
+
+```
+Read the theory  →  Study the exercises  →  Implement until tests pass  →  Compare with the reference  →  Test yourself with the Deep Dive Q&A
+```
+
+The exercises use a `todo_exercise!()` macro — every function signature is already in place, every test is already written. Your job is to fill in the implementations until `cargo test` goes green.
+
+## What you will build
+
+| Day | Theme | What you implement | Solidity milestone |
+|-----|-------|--------------------|-------------------|
+| 1 | **The Machine Exists** | 256-bit integers, a bounded stack, byte-addressable memory | — |
+| 2 | **The Interpreter Loop** | Opcode decoding, the fetch-decode-execute loop, gas metering | `Return42` runs |
+| 3 | **State and Control Flow** | Persistent storage (EIP-2929), JUMP/JUMPI, loops in bytecode | `Store42`, `Loop`, `Add` run |
+| 4 | **Contracts and Deployment** | CREATE/CREATE2 address derivation, the Host trait, LOG events | `EventEmitter` runs |
+| 5 | **The Call Stack** | CALL/DELEGATECALL/STATICCALL, the 63/64 gas rule, call frames | — |
+| 6 | **From Bytecode to IR** | Basic blocks, control flow graphs, stack-height analysis, liveness | — |
+| 7 | **Optimization Passes** | Constant folding, dead code elimination, interpreter performance | — |
+
+By the end, you will have a working EVM interpreter that can execute real Solidity-compiled contracts, plus a compiler backend for bytecode analysis and optimization — built entirely by you, with zero external dependencies.
 
 ## Who is this for?
 
-You should be comfortable with basic Rust — ownership, traits, enums, pattern matching, `Result`/`Option`. If you've completed [100 Exercises to Learn Rust](https://rust-exercises.com/) or equivalent, you're ready.
+You should be comfortable with basic Rust. If you have completed [100 Exercises to Learn Rust](https://rust-exercises.com/) or equivalent, you are ready. Specifically, you should know:
 
-No prior Ethereum or blockchain knowledge is required.
+- Ownership and borrowing
+- Enums, pattern matching, `match`
+- Traits and trait implementations
+- `Result<T, E>` and `Option<T>`
+- Basic collections (`Vec`, `HashMap`)
 
-## Getting started
+No prior Ethereum, blockchain, or compiler knowledge is required. The tutorial introduces everything you need, from the Yellow Paper notation to basic block theory.
 
-### 1. Clone the repository
+## Why Rust?
 
-```bash
-git clone https://github.com/jonaprieto/toyevm.git
-cd toyevm
-```
+Rust is the language of choice for production EVM implementations. [revm](https://github.com/bluealloy/revm) (used by Reth, Foundry, and others) is written in Rust. The EVM's requirements — deterministic execution, precise gas accounting, no undefined behavior — align perfectly with Rust's guarantees.
 
-### 2. Start Day 1 — the exercise branch
-
-The `day-1-start` branch has the project structure with **stub files** — all type definitions and method signatures are in place, but every function body is `todo_exercise!()`. Your job is to implement them.
-
-```bash
-git checkout day-1-start
-git checkout -b my-day-1       # your personal working branch
-```
-
-### 3. Look at the project structure
-
-```
-toyevm/
-├── Cargo.toml          ← Rust project manifest (lib + binary)
-├── src/
-│   ├── lib.rs          ← crate root — declares modules + todo_exercise! macro
-│   ├── main.rs         ← binary entry point
-│   ├── types/
-│   │   ├── mod.rs      ← re-exports U256
-│   │   └── u256.rs     ← ★ Exercise 1.1–1.4: implement U256 type
-│   ├── stack.rs        ← ★ Exercise 1.5–1.6: implement Stack
-│   └── memory.rs       ← ★ Exercise 1.7–1.8: implement Memory
-└── book/               ← this book (mdBook source)
-```
-
-The files marked with ★ contain stubs like this:
-
-```rust
-pub fn wrapping_add(self, _rhs: Self) -> Self {
-    todo_exercise!("Exercise 1.2 — add byte-by-byte from LSB to MSB, propagating carry")
-}
-```
-
-Each stub has the correct signature — your job is to replace `todo_exercise!(...)` with a real implementation.
-
-### 4. Run the tests
-
-```bash
-cargo test
-```
-
-You'll see 33 failing tests, each with a hint:
-
-```
----- types::u256::tests::ex_1_2_simple_add ----
-thread panicked at 'Exercise not yet implemented.
-  Hint: Exercise 1.2 — add byte-by-byte from LSB to MSB, propagating carry'
-
-test result: FAILED. 4 passed; 33 failed; 0 ignored
-```
-
-Implement until all 37 tests pass.
-
-### 5. Compare your solution to the reference
-
-Once your tests pass, see how your implementation compares to ours:
-
-```bash
-git diff day-1 -- src/
-```
-
-This shows the exact differences between your code and the reference solution. You might find a more elegant approach — or discover edge cases you hadn't considered.
-
-```admonish tip title="Reading the reference without diffing"
-If you want to peek at the full reference solution at any point:
-`git show day-1:src/types/u256.rs` (shows the file without switching branches)
-```
-
-### 6. Advance to the next day
-
-```bash
-git checkout -b my-day-2 my-day-1    # branch from your completed Day 1
-```
-
-For Days 2–7, the exercise chapter in this book provides stub code to paste into new files. The pattern is always:
-
-1. Create the stub files shown in the "Exercise Setup" section
-2. `cargo test` — new tests fail
-3. Implement until they pass
-4. `git diff day-N -- src/` — compare to reference
-
-```admonish tip title="How the branches work"
-Solution branches `day-1` through `day-7` are *stacked snapshots* — each contains everything from prior days plus new code. Your personal `my-day-N` branches grow incrementally as you add modules. Use `git diff day-N` to compare any day.
-```
-
-## Comparing your work — quick reference
-
-| Day | After completing | Compare with |
-|-----|-----------------|--------------|
-| 1 | all 37 tests pass | `git diff day-1 -- src/types src/stack.rs src/memory.rs` |
-| 2 | all tests pass | `git diff day-2 -- src/opcode.rs src/gas.rs src/interpreter.rs` |
-| 3 | all tests pass | `git diff day-3 -- src/storage.rs src/context.rs src/interpreter.rs` |
-| 4 | all tests pass | `git diff day-4 -- src/contract.rs src/host.rs` |
-| 5 | all tests pass | `git diff day-5 -- src/call.rs` |
-| 6 | all tests pass | `git diff day-6 -- src/compiler/` |
-| 7 | all tests pass | `git diff day-7 -- src/compiler/fold.rs src/compiler/dce.rs` |
-
-## How each day works
-
-Each day has three parts in this book:
-
-1. **Theory** — what the EVM concept is and why it matters, with Rust code snippets pulled directly from the source files
-2. **Exercises** — a list of exercises with the file to edit, the `cargo test` command to verify, and a hint
-3. **Deep Dive** — Q&A that tests your understanding of the concepts
-
-The recommended workflow:
-
-```
-Read the theory chapter
-    ↓
-Look at the exercise list
-    ↓
-Open the source file, read the tests
-    ↓
-Implement (or study the reference implementation)
-    ↓
-cargo test — verify
-    ↓
-Read the Deep Dive questions, try to answer before reading
-```
-
-## What you'll build
-
-| Day | Branch | Theme | Key outcome |
-|-----|--------|-------|-------------|
-| 1 | `day-1` | The Machine Exists | U256, Stack, Memory data structures |
-| 2 | `day-2` | The Interpreter Loop | Execution loop with gas metering |
-| 3 | `day-3` | State and Control Flow | Storage, JUMP/JUMPI, EIP-2929 |
-| 4 | `day-4` | Contracts and Deployment | CREATE/CREATE2, Host trait, LOG |
-| 5 | `day-5` | The Call Stack | CALL/DELEGATECALL/STATICCALL |
-| 6 | `day-6` | From Bytecode to IR | Control flow graph, liveness analysis |
-| 7 | `day-7` | Optimization Passes | Constant folding, dead code elimination |
-
-By the end, you'll have a working EVM interpreter with a compiler backend — built entirely by you.
-
-## Running Solidity examples (optional)
-
-The repository includes a [Foundry](https://book.getfoundry.sh/) project in `examples/` with simple Solidity contracts. If you have Foundry installed, you can compile them and feed the bytecode into toyevm:
-
-```bash
-cd examples
-forge build
-forge inspect Return42 deployedBytecode    # get hex bytecode
-forge inspect Return42 assembly            # annotated EVM assembly
-```
-
-This is covered in later days as the interpreter gains enough opcodes to execute real contracts.
-
-## Tools you'll need
-
-| Tool | Required? | Install |
-|------|----------|---------|
-| Rust (nightly) | Yes | [rustup.rs](https://rustup.rs/) |
-| mdBook | For the book | `cargo install mdbook` |
-| Foundry | Optional | [getfoundry.sh](https://book.getfoundry.sh/getting-started/installation) |
+Building an EVM in Rust also teaches you patterns you will encounter in real blockchain infrastructure: newtypes for type safety, `repr(u8)` enums for jump table dispatch, trait objects for pluggable backends, and zero-dependency design for auditability.
 
 ## References
 
-- [evm.codes](https://www.evm.codes/) — interactive opcode reference
-- [Ethereum Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf) — formal specification
-- [EELS (Python reference implementation)](https://github.com/ethereum/execution-specs)
-- [revm](https://github.com/bluealloy/revm) — production Rust EVM
-- [LambdaClass evm_mlir](https://blog.lambdaclass.com/evm-performance-boosts-with-mlir/) — AOT compilation approach
+These are the primary sources this tutorial builds on. You don't need to read them before starting — the tutorial introduces concepts as needed — but they are valuable companions:
+
+- [evm.codes](https://www.evm.codes/) — interactive opcode reference with gas costs and stack diagrams
+- [Ethereum Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf) ([source](https://github.com/ethereum/yellowpaper)) — the formal EVM specification
+- [EELS (Python reference implementation)](https://github.com/ethereum/execution-specs) — executable specification of the EVM
+- [revm](https://github.com/bluealloy/revm) — production Rust EVM used by Reth and Foundry
+- [LambdaClass evm_mlir](https://blog.lambdaclass.com/evm-performance-boosts-with-mlir/) — AOT compilation approach with benchmarks
+
+Ready? Head to the [Getting Started](./getting_started.md) page to set up your environment and begin Day 1.

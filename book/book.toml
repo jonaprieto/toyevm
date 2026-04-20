@@ -1,5 +1,5 @@
 [book]
-title = "toyevm: Build an EVM from Scratch in Rust"
+title = "ToyEVM"
 authors = ["Jonathan Cubides"]
 language = "en"
 src = "src"
@@ -19,5 +19,5 @@ command = "mdbook-mermaid"
 
 [output.html]
 git-repository-url = "https://github.com/jonaprieto/toyevm"
-additional-css = ["./mdbook-admonish.css"]
+additional-css = ["./mdbook-admonish.css", "./custom.css"]
 additional-js = ["mermaid.min.js", "mermaid-init.js"]

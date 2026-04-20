@@ -4,12 +4,29 @@ Storage is the EVM's persistent memory. Unlike memory (μ_m), which is wiped aft
 
 ## SLOAD and SSTORE
 
-| Opcode | Stack | Effect |
-|--------|-------|--------|
-| `SLOAD` | `[key]` → `[value]` | Read from storage |
-| `SSTORE` | `[key, value]` → `[]` | Write to storage |
+### SLOAD — read a value from storage
 
-Uninitialized slots read as zero. Writing zero to a slot is equivalent to deleting it.
+`SLOAD` pops a key from the stack and pushes the corresponding value from storage. Uninitialized slots return zero.
+
+```
+Before:  Stack [ ..., 0x01 ]       ← key on top
+         Storage { 0x01: 42 }
+SLOAD: pop key (0x01), read storage[0x01]
+After:   Stack [ ..., 42 ]         ← value from storage
+```
+
+### SSTORE — write a value to storage
+
+`SSTORE` pops a key and a value, then writes the value to storage at that key. Writing zero clears the slot.
+
+```
+Before:  Stack [ ..., 42, 0x01 ]   ← key on top, value below
+         Storage { }
+SSTORE: pop key (0x01), pop value (42)
+        write storage[0x01] = 42
+After:   Stack [ ... ]
+         Storage { 0x01: 42 }
+```
 
 ## Cold vs. Warm Access (EIP-2929)
 
@@ -25,7 +42,7 @@ EIP-2929 introduced the **accessed storage keys** set:
 The first time you touch a slot, the node must fetch it from disk (cold). After that, it's in memory (warm). The gas costs reflect this reality.
 
 ```admonish danger title="EIP-2929: Breaking Change"
-EIP-2929 changed SLOAD costs by 26x (800 → 2100 for cold). Contracts that hardcoded gas assumptions (e.g., `.transfer()` with 2300 gas stipend) broke on mainnet. Always use the warm/cold model.
+EIP-2929 raised cold SLOAD costs ~2.6x (800 → 2100). Combined with the earlier EIP-1884 increase (200 → 800), contracts that hardcoded gas assumptions broke on mainnet. Always use the warm/cold model.
 ```
 
 ```rust

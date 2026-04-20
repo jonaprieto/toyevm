@@ -25,9 +25,9 @@ These exercises build the control flow graph (CFG) step by step: identify leader
 
 ## Exercise 6.1 — Leader identification
 
-**What to do.** Given the bytecode `[PUSH1 0x06, JUMP, INVALID, PUSH1 0x00, JUMPDEST, STOP]`,
+**What to do.** Given the bytecode `[PUSH1 0x04, JUMP, INVALID, JUMPDEST, STOP]`,
 call your leader-identification function and assert that offsets `0`, `3` (instruction after
-JUMP), and `4` (JUMPDEST) are all marked as leaders. Offset `2` (INVALID) is **not** a leader.
+JUMP), and `4` (JUMPDEST) are all marked as leaders.
 
 **How to verify.**
 
@@ -116,10 +116,11 @@ the edge; otherwise the jump is invalid and should produce no edge (or an error 
 
 ## Exercise 6.5 — JUMPI produces two outgoing edges
 
-**What to do.** Build a CFG from `PUSH1 0x06, PUSH1 0x01, JUMPI, PUSH1 0x00, STOP,
-JUMPDEST, STOP`. Assert that the block ending with JUMPI has **exactly two** outgoing
-edges: one to the JUMPDEST target and one fall-through to the instruction immediately
-after JUMPI.
+**What to do.** Build a CFG from `PUSH1 0x01, PUSH1 0x07, JUMPI, STOP, INVALID,
+JUMPDEST, STOP`. The push order is: condition first (1, deeper), then destination (0x07,
+on top) — JUMPI pops the destination from TOS and the condition second. Assert that the
+block ending with JUMPI has **exactly two** outgoing edges: one to the JUMPDEST target
+(offset 7) and one fall-through to the instruction immediately after JUMPI.
 
 **How to verify.**
 
@@ -188,8 +189,8 @@ height of each successor.
 ## Exercise 6.8 — Use/def sets (net stack effects)
 
 **What to do.** For a block containing `DUP1, ADD, POP` (net effect: pops 1, pushes 0),
-assert that `uses = 2` (DUP1 reads depth 1 from entry stack; ADD reads two) and
-`defs = 0` (POP removes the result).
+assert that `uses = 1` (DUP1 reads 1 slot from the entry stack; ADD consumes the two
+copies DUP1 produced, not additional entry-stack slots) and `defs = 0`.
 
 Also test `PUSH1 x, PUSH1 y, ADD` — this block produces one value from constants only,
 so `uses = 0` and `defs = 1`.

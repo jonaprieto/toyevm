@@ -1,6 +1,7 @@
 # Summary
 
 [Introduction](./introduction.md)
+[Getting Started](./getting_started.md)
 
 # Day 1 — The Machine Exists
 
@@ -8,22 +9,22 @@
 - [The U256 Type](./day1/02_u256.md)
 - [The Stack](./day1/03_stack.md)
 - [Memory](./day1/04_memory.md)
-- [Deep Dive](./day1/05_deep_dive.md)
 - [Exercises](./day1/06_exercises.md)
+- [Deep Dive](./day1/05_deep_dive.md)
 
 # Day 2 — The Interpreter Loop
 
 - [Bytecode and the Execution Loop](./day2/01_bytecode.md)
 - [Gas: The EVM's Resource Model](./day2/02_gas.md)
-- [Deep Dive](./day2/03_deep_dive.md)
 - [Exercises](./day2/04_exercises.md)
+- [Deep Dive](./day2/03_deep_dive.md)
 
 # Day 3 — State and Control Flow
 
 - [Storage and EIP-2929](./day3/01_storage.md)
 - [Control Flow: JUMP, JUMPI, and JUMPDEST](./day3/02_control_flow.md)
-- [Deep Dive](./day3/03_deep_dive.md)
 - [Exercises](./day3/04_exercises.md)
+- [Deep Dive](./day3/03_deep_dive.md)
 
 # Day 4 — Contracts and Deployment
 

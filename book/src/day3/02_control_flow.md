@@ -1,12 +1,44 @@
 # Control Flow: JUMP, JUMPI, and JUMPDEST
 
-The EVM has no structured control flow — no `if`, no `for`, no function calls at the bytecode level. Instead, it has two jump instructions and a marker opcode:
+The EVM has no structured control flow — no `if`, no `for`, no function calls at the bytecode level. Instead, it has two jump instructions and a marker opcode.
 
-| Opcode | Effect |
-|--------|--------|
-| `JUMP` | Pop destination from stack, jump unconditionally |
-| `JUMPI` | Pop destination and condition; jump if condition ≠ 0 |
-| `JUMPDEST` | No-op marker; valid target for jumps |
+### JUMP — unconditional jump
+
+`JUMP` pops a destination from the stack and sets the program counter to that offset. The destination must be a valid `JUMPDEST`.
+
+```
+Before:  Stack [ ..., 0x0A ]     ← destination on top
+         PC = 5
+JUMP: pop destination (0x0A)
+After:   Stack [ ... ]
+         PC = 0x0A               ← execution continues at offset 10
+```
+
+### JUMPI — conditional jump
+
+`JUMPI` pops a destination and a condition. If the condition is nonzero, it jumps; otherwise, execution falls through to the next instruction.
+
+```
+Before:  Stack [ ..., 1, 0x0A ]  ← destination on top, condition below
+         PC = 5
+JUMPI: pop destination (0x0A), pop condition (1)
+       condition ≠ 0 → jump
+After:   Stack [ ... ]
+         PC = 0x0A               ← branch taken
+```
+
+```
+Before:  Stack [ ..., 0, 0x0A ]  ← destination on top, condition = 0
+         PC = 5
+JUMPI: pop destination (0x0A), pop condition (0)
+       condition = 0 → fall through
+After:   Stack [ ... ]
+         PC = 8                  ← next instruction (5 + 3 bytes for JUMPI args)
+```
+
+### JUMPDEST — jump target marker
+
+`JUMPDEST` is a no-op that costs 1 gas. Its only purpose is to mark a valid landing site for `JUMP` and `JUMPI`. Jumping to any byte that is not a `JUMPDEST` causes an `InvalidJump` error.
 
 ## JUMPDEST validation
 

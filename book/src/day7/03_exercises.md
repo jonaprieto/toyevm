@@ -27,7 +27,7 @@ These exercises implement constant folding and dead code elimination (DCE) as co
 
 ## Exercise 7.1 — OptimizationPass trait compiles for both passes
 
-**What to do.** Instantiate both `ConstantFold` and `Dce` (dead code elimination) as
+**What to do.** Instantiate both `ConstantFold` and `DeadCodeElim` (dead code elimination) as
 `Box<dyn OptimizationPass>` values. Call `pass.name()` on each and assert the returned
 strings are non-empty. The test should compile and pass without running any bytecode.
 
@@ -124,7 +124,7 @@ from the gas schedule table.
 ## Exercise 7.5 — DCE removes unreachable blocks
 
 **What to do.** Build a CFG with three blocks: block 0 jumps to block 2, block 1 has no
-predecessors (unreachable), and block 2 is a terminal. Run the `Dce` pass. Assert that
+predecessors (unreachable), and block 2 is a terminal. Run the `DeadCodeElim` pass. Assert that
 the returned `changes > 0` and that block 1 no longer exists in `cfg.blocks`.
 
 **How to verify.**
@@ -133,8 +133,8 @@ the returned `changes > 0` and that block 1 no longer exists in `cfg.blocks`.
 cargo test ex_7_5
 ```
 
-**Hint.** The `Dce` pass relies on the liveness analysis from Day 6. Run liveness
-first (or have `Dce::run` call it internally) to determine which blocks are dead,
+**Hint.** The `DeadCodeElim` pass relies on the liveness analysis from Day 6. Run liveness
+first (or have `DeadCodeElim::run` call it internally) to determine which blocks are dead,
 then remove them from `cfg.blocks` and drop their edges.
 
 > **Rust pattern — graph pruning.** Collect dead block IDs into a `Vec`, then
@@ -147,7 +147,7 @@ then remove them from `cfg.blocks` and drop their edges.
 
 **What to do.** Build a CFG where block 0 ends with `PUSH1 target, JUMP` to block 2,
 and block 1 (at offset between the JUMP and the JUMPDEST) contains unreachable
-instructions. Run `Dce`. Assert block 1 is removed and blocks 0 and 2 remain.
+instructions. Run `DeadCodeElim`. Assert block 1 is removed and blocks 0 and 2 remain.
 
 **How to verify.**
 
@@ -161,7 +161,7 @@ will never visit it.
 
 > **Rust pattern — liveness as a prerequisite.** DCE cannot run correctly without
 > knowing which blocks are reachable. Express this dependency by calling the liveness
-> pass inside `Dce::run`, or by requiring a `LivenessInfo` argument. Encoding
+> pass inside `DeadCodeElim::run`, or by requiring a `LivenessInfo` argument. Encoding
 > prerequisites in the type signature prevents calling DCE on a stale CFG.
 
 ---
@@ -170,7 +170,7 @@ will never visit it.
 
 **What to do.** Build a CFG where every block is reachable from the entry and every block
 can reach an exit (a diamond-shaped CFG: block 0 → blocks 1 and 2 via JUMPI → block 3).
-Run `Dce`. Assert that `changes == 0` and that all four blocks still exist.
+Run `DeadCodeElim`. Assert that `changes == 0` and that all four blocks still exist.
 
 **How to verify.**
 
@@ -194,14 +194,10 @@ this test catches it before the optimizer silently corrupts correct code.
 Combine both passes in a loop:
 
 ```rust
-let passes: Vec<Box<dyn OptimizationPass>> = vec![
-    Box::new(ConstantFold),
-    Box::new(Dce),
-];
-let mut total = 1;
-while total > 0 {
-    total = passes.iter().map(|p| p.run(cfg)).sum();
-}
+let fold = ConstantFold;
+let dce = DeadCodeElim;
+let passes: Vec<&dyn OptimizationPass> = vec![&fold, &dce];
+run_to_fixed_point(&mut cfg, &passes);
 ```
 
 Assert that after the loop exits, the MUL chain is fully folded **and** block 1 is gone.

@@ -50,7 +50,7 @@ equivalent `from_byte` constructor) for several known opcodes and verify:
 **How to verify:**
 
 ```sh
-cargo test opcode_from_byte
+cargo test ex_2_1
 ```
 
 **Hint.** The `Opcode` enum is `#[repr(u8)]`, so every variant is stored as its
@@ -82,7 +82,7 @@ be `Option<Opcode>` or `Result<Opcode, InvalidOpcode>`.
 **How to verify:**
 
 ```sh
-cargo test push_immediate_size
+cargo test ex_2_2
 ```
 
 **Hint.** PUSH opcodes run from `PUSH1` (0x60) through `PUSH32` (0x7F). The
@@ -117,7 +117,7 @@ Assert that after execution the top of the stack is `U256::from(8u64)`.
 **How to verify:**
 
 ```sh
-cargo test interpreter_add
+cargo test ex_2_3
 ```
 
 **Hint.** Build the bytecode as `vec![0x60, 0x03, 0x60, 0x05, 0x01, 0x00]`.
@@ -151,7 +151,7 @@ Assert that `result.gas_used` (or `gas_limit - remaining_gas`) equals `9`.
 **How to verify:**
 
 ```sh
-cargo test interpreter_gas_accounting
+cargo test ex_2_4
 ```
 
 **Hint.** Look at what the interpreter returns — it is probably a struct with
@@ -181,7 +181,7 @@ Use `PUSH1` + the opcode + `STOP` for each test.
 **How to verify:**
 
 ```sh
-cargo test interpreter_arithmetic
+cargo test ex_2_5
 ```
 
 **Hint.** Remember stack order: `PUSH1 a`, `PUSH1 b`, `SUB` computes `b - a`
@@ -210,7 +210,7 @@ and asserts the top of the stack is `U256::ZERO`.
 **How to verify:**
 
 ```sh
-cargo test interpreter_div_zero
+cargo test ex_2_6
 ```
 
 **Hint.** The EVM specification (Yellow Paper §9.4.2) explicitly defines
@@ -219,21 +219,21 @@ this. If the test panics instead of returning zero, find the division
 implementation and add a zero-divisor guard.
 
 > **Rust pattern — domain-specific semantics vs panics.**
-> Rust's built-in `/` operator panics on integer division by zero (in debug
-> builds) or produces undefined behaviour (in release builds without overflow
-> checks). The EVM intentionally diverges from this: division by zero is not an
-> error, it is a well-defined operation. This is a case where the correct Rust
-> idiom is *not* to use the standard operator — instead, the interpreter handles
-> the zero case explicitly, returning `U256::ZERO` before calling any division
-> primitive.
+> Rust's built-in `/` operator panics on integer division by zero in both
+> debug and release builds — unlike C, Rust never produces undefined behaviour
+> for integer arithmetic. The EVM intentionally diverges from Rust: division by
+> zero is not an error, it is a well-defined operation returning zero. This is a
+> case where the correct Rust idiom is *not* to use the standard operator —
+> instead, the interpreter handles the zero case explicitly, returning
+> `U256::ZERO` before calling any division primitive.
 
 ---
 
 ## Exercise 2.7 — LT, GT, EQ
 
 **What to implement.** Verify that comparison opcodes produce `0` or `1`:
-- `PUSH1 3`, `PUSH1 5`, `LT` → top of stack is `1` (3 < 5).
-- `PUSH1 5`, `PUSH1 3`, `LT` → top of stack is `0` (5 is not < 3).
+- `PUSH1 5`, `PUSH1 3`, `LT` → top of stack is `1` (3 < 5, since 3 is on top).
+- `PUSH1 3`, `PUSH1 5`, `LT` → top of stack is `0` (5 is not < 3, since 5 is on top).
 - `PUSH1 7`, `PUSH1 7`, `EQ` → top of stack is `1`.
 
 Write at least one test for each of `LT`, `GT`, and `EQ`.
@@ -243,7 +243,7 @@ Write at least one test for each of `LT`, `GT`, and `EQ`.
 **How to verify:**
 
 ```sh
-cargo test interpreter_comparison
+cargo test ex_2_7
 ```
 
 **Hint.** Watch the operand order carefully. On the EVM, `LT` pops `a` (top),
@@ -271,7 +271,7 @@ the output is empty.
 **How to verify:**
 
 ```sh
-cargo test interpreter_out_of_gas
+cargo test ex_2_8
 ```
 
 **Hint.** Look at the `ExecutionResult` or equivalent type that `run()` returns.
@@ -305,7 +305,7 @@ a generous gas limit. Assert:
 **How to verify:**
 
 ```sh
-cargo test interpreter_stop
+cargo test ex_2_9
 ```
 
 **Hint.** `STOP` does not pop anything, does not push anything, and costs 0 gas.
@@ -334,7 +334,7 @@ result and verify it is an empty `Vec<u8>` or slice.
 **How to verify:**
 
 ```sh
-cargo test interpreter_return
+cargo test ex_2_10
 ```
 
 **Hint.** `RETURN` takes two stack arguments: `offset` and `length`. It copies
@@ -351,6 +351,10 @@ wrote with `MSTORE`.
 > friendlier failure mode than in C.
 
 ---
+
+```admonish success title="Milestone: Return42"
+After completing Day 2, your interpreter can execute the `Return42` Solidity contract — a real compiled contract that stores 42 in memory and returns it. Run `cargo test --test solidity_integration return42` to verify.
+```
 
 ## Yellow Paper Map
 

@@ -52,19 +52,29 @@ The `Host` trait enables *inversion of control*. The interpreter calls `host.cod
 
 ## LOG Opcodes
 
-LOG0 through LOG4 emit event logs with 0 to 4 indexed **topics** and arbitrary **data** bytes.
+### LOG0 through LOG4 — emit event logs
 
-Gas cost: `375 + 8 * data_length + 375 * num_topics`
+`LOGn` pops an offset and size from the stack, then pops `n` topic values. It reads `size` bytes from memory starting at `offset` and creates a log entry.
+
+```
+Before:  Stack [ ..., topic1, 32, 0x00 ]  ← offset on top, size below, then topics
+         Memory[0x00..0x20] = <event data>
+LOG1: pop offset (0x00), pop size (32), pop topic (topic1)
+      emit log { topics: [topic1], data: memory[0x00..0x20] }
+After:   Stack [ ... ]
+```
+
+Gas cost: $375 + 8 \times \text{data\_length} + 375 \times \text{num\_topics}$
 
 | Opcode | Topics | Gas (32 bytes data) |
 |--------|--------|-------------------|
-| LOG0 | 0 | 375 + 256 = 631 |
-| LOG1 | 1 | 375 + 256 + 375 = 1006 |
-| LOG2 | 2 | 375 + 256 + 750 = 1381 |
-| LOG3 | 3 | 375 + 256 + 1125 = 1756 |
-| LOG4 | 4 | 375 + 256 + 1500 = 2131 |
+| `LOG0` | 0 | $375 + 256 = 631$ |
+| `LOG1` | 1 | $375 + 256 + 375 = 1006$ |
+| `LOG2` | 2 | $375 + 256 + 750 = 1381$ |
+| `LOG3` | 3 | $375 + 256 + 1125 = 1756$ |
+| `LOG4` | 4 | $375 + 256 + 1500 = 2131$ |
 
-Logs are not accessible from within the EVM — they're write-only. Off-chain clients read them via the JSON-RPC `eth_getLogs` API.
+Logs are not accessible from within the EVM — they are write-only. Off-chain clients read them via the JSON-RPC `eth_getLogs` API.
 
 ## Exercises
 

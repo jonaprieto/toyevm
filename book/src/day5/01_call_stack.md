@@ -24,18 +24,39 @@ sequenceDiagram
 | `STATICCALL` | Caller's address | Callee's | **Forbidden** | No |
 | `CALLCODE` | Caller's address | Caller's | Allowed | Yes (deprecated) |
 
-### CALL
-The standard call. Creates a new context where `msg.sender` is the calling contract and storage access is scoped to the callee. Value (ETH) can be transferred.
+### CALL — standard call
 
-### DELEGATECALL
+Creates a new execution context. `msg.sender` is the calling contract, storage access is scoped to the callee, and ETH can be transferred.
+
+```
+Before:  Stack [ ..., retSize, retOff, argSize, argOff, value, addr, gas ]
+CALL: pop all 7 args → create new frame → execute callee bytecode
+After:   Stack [ ..., success ]  ← 1 if callee returned, 0 if it reverted
+```
+
+### DELEGATECALL — call with caller's context
+
 The foundation of the **proxy pattern**. The callee's code runs in the caller's storage context. `msg.sender` and `msg.value` are preserved from the original call. This is how upgradeable contracts work — the proxy's storage is modified by the implementation's logic.
+
+```
+Before:  Stack [ ..., retSize, retOff, argSize, argOff, addr, gas ]
+DELEGATECALL: pop 6 args → new frame with CALLER's storage and msg.sender
+After:   Stack [ ..., success ]  ← 1 or 0
+```
 
 ```admonish warning title="Pitfall: DELEGATECALL Storage Collisions"
 When Contract A DELEGATECALLs Contract B, B's code writes to A's storage slots. If A and B have different storage layouts, B will overwrite A's variables at the wrong slots. This is the most common proxy bug.
 ```
 
-### STATICCALL
-A read-only call. Any opcode that modifies state (`SSTORE`, `LOG`, `CREATE`, `CALL` with value) will revert the sub-call. Used for view functions and safe external reads.
+### STATICCALL — read-only call
+
+A read-only call. Any opcode that modifies state (`SSTORE`, `LOG0`–`LOG4`, `CREATE`, `CREATE2`, `CALL` with non-zero value, and `SELFDESTRUCT`) will revert the sub-call. Used for view functions and safe external reads.
+
+```
+Before:  Stack [ ..., retSize, retOff, argSize, argOff, addr, gas ]
+STATICCALL: pop 6 args → new frame with is_static=true
+After:   Stack [ ..., success ]  ← reverts if callee tries to write state
+```
 
 ## The 63/64 Rule (EIP-150)
 

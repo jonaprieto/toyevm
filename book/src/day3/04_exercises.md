@@ -50,7 +50,7 @@ Assert that after execution the top of the stack equals the value you stored.
 **How to verify:**
 
 ```sh
-cargo test interpreter_mload_mstore
+cargo test ex_3_1
 ```
 
 **Hint.** `PUSH32` is opcode `0x7F` followed by 32 immediate bytes. Build your
@@ -85,12 +85,12 @@ difference matches the memory expansion formula:
 **How to verify:**
 
 ```sh
-cargo test interpreter_memory_gas
+cargo test ex_3_2
 ```
 
 **Hint.** Compute the expected cost by hand:
 - 1 word: `3*1 + 1/512 = 3` gas.
-- 34 words: `3*34 + 34*34/512 = 102 + 2 = 104` gas.
+- 33 words: `3*33 + 33*33/512 = 99 + 2 = 101` gas.
 The memory expansion cost for a single `MSTORE` is `new_cost - old_cost`
 (where `old_cost` is 0 for an empty memory). Add the base cost of `MSTORE`
 (3 gas) and the `PUSH1`/`PUSH32` costs to get the total.
@@ -126,12 +126,12 @@ Assert the top of the stack equals `<value>`.
 **How to verify:**
 
 ```sh
-cargo test interpreter_sstore_sload
+cargo test ex_3_3
 ```
 
 **Hint.** Use a simple key like `U256::from(1u64)` and a recognisable value like
-`U256::from(0xCAFE_BABEu64)`. `SSTORE` pops the *value* first (top of stack),
-then the *key* (second item), so push the value before the key.
+`U256::from(0xCAFE_BABEu64)`. `SSTORE` pops the *key* first (top of stack),
+then the *value* (second item), so push the value before the key.
 
 > **Rust pattern — `HashMap` as a storage model.**
 > `Storage` wraps a `HashMap<U256, U256>`. This is a faithful model of the EVM
@@ -157,7 +157,7 @@ Assert the gas consumed after each `SLOAD` using `gas_limit - remaining_gas`.
 **How to verify:**
 
 ```sh
-cargo test interpreter_cold_warm_sload
+cargo test ex_3_4
 ```
 
 **The gas function in storage:**
@@ -197,7 +197,7 @@ readings, or use a sufficiently large gap between `gas_limit` checkpoints.
 **How to verify:**
 
 ```sh
-cargo test interpreter_jumpdest
+cargo test ex_3_5
 ```
 
 **Hint.** The interpreter pre-scans bytecode to build a `Vec<bool>` (or
@@ -237,7 +237,7 @@ stack (proving the skipped instruction never ran).
 **How to verify:**
 
 ```sh
-cargo test interpreter_jump
+cargo test ex_3_6
 ```
 
 **Hint.** Build the bytecode as `[0x60, 0x05, 0x56, 0x60, 0xFF, 0x5B, 0x00]`.
@@ -275,7 +275,7 @@ Assert execution succeeds and `0xFF` is not on the stack.
 **How to verify:**
 
 ```sh
-cargo test interpreter_jumpi_true
+cargo test ex_3_7
 ```
 
 **Hint.** Count offsets carefully: `PUSH1 0x01` occupies offsets 0–1, `PUSH1 destination`
@@ -312,7 +312,7 @@ Assert execution succeeds and `U256::from(0x42u64)` is on the top of the stack.
 **How to verify:**
 
 ```sh
-cargo test interpreter_jumpi_false
+cargo test ex_3_8
 ```
 
 **Hint.** The bytecode is identical to Exercise 3.7 except the condition byte
@@ -349,7 +349,7 @@ Assert the top of the stack equals `U256::from(0xBEEFu64)`.
 **How to verify:**
 
 ```sh
-cargo test interpreter_calldataload
+cargo test ex_3_9
 ```
 
 **Hint.** The execution environment struct (often called `CallContext`,
@@ -386,7 +386,7 @@ write out the intended bytecode in a comment, then encode the hex bytes.
 **How to verify:**
 
 ```sh
-cargo test interpreter_loop
+cargo test ex_3_10
 ```
 
 **Hint.** A minimal loop skeleton in EVM bytecode:
@@ -429,6 +429,10 @@ instruction.
 > by hand once, you will never again take label resolution for granted.
 
 ---
+
+```admonish success title="Milestone: Real Solidity Contracts"
+After completing Day 3, your interpreter can execute four real Solidity contracts: `Store42` (storage), `Loop` (control flow), and `Add` (ABI dispatch with function selectors, calldata decoding, and checked arithmetic). Run `cargo test --test solidity_integration` to verify all of them.
+```
 
 ## Yellow Paper Map
 

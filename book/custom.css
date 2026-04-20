@@ -1,0 +1,6 @@
+/* Invert external diagrams (Kroki bytefield SVGs) in dark themes */
+.ayu img[src*="kroki.io"],
+.navy img[src*="kroki.io"],
+.coal img[src*="kroki.io"] {
+    filter: invert(1) hue-rotate(180deg);
+}

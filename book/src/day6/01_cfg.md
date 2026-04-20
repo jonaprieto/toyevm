@@ -25,7 +25,7 @@ Because all instructions in a block execute together, you can reason about the b
 A **leader** (the first instruction of a block) is identified by three rules:
 1. The first byte of the bytecode (offset 0)
 2. Any `JUMPDEST` instruction
-3. The instruction immediately after a `JUMP`, `JUMPI`, `STOP`, `RETURN`, or `REVERT`
+3. The instruction immediately after a `JUMP`, `JUMPI`, `STOP`, `RETURN`, `REVERT`, or `INVALID`
 
 ### Worked example
 
@@ -52,7 +52,7 @@ Edges represent possible control flow between blocks:
 | Fall-through (no terminator) | 1 edge to next block |
 | `JUMP` | 1 edge to target (if statically resolvable) |
 | `JUMPI` | 2 edges: true branch (target) + false branch (fall-through) |
-| `STOP` / `RETURN` / `REVERT` | 0 edges (terminal) |
+| `STOP` / `RETURN` / `REVERT` / `INVALID` | 0 edges (terminal) |
 
 Here's the CFG for the loop bytecode from Day 3 (`i = 0; while i < 5: i++; return i`):
 
@@ -68,7 +68,7 @@ graph TD
     B1 -- "i >= 5 (false)" --> B2
     B3 --> B1
 
-    style B3 fill:#ffe0b2
+    style B3 stroke:#e65100,stroke-width:2px,stroke-dasharray: 5 5
 ```
 
 Note the **back-edge** B3→B1: this is a loop. A back-edge points to a block that *dominates* the source — block B1 dominates B3 because every path from entry to B3 goes through B1.
@@ -165,8 +165,8 @@ This is block reachability, not true value-level liveness. True liveness tracks 
 |------|-------------|---------------------|
 | **revm** (analysis pass) | Pre-validates JUMPDEST table, caches gas | Our `find_leaders` + `compute_jumpdests` |
 | **revmc** (JIT/AOT) | Lifts to LLVM IR, compiles to native | Our CFG → Day 7 optimization → (would need LLVM backend) |
-| **ethrex (levm)** | LambdaClass's Rust EVM with MLIR | Full CFG + dominator tree + SSA |
-| **EOF** | New bytecode format (EIP-3540) | Eliminates dynamic jumps entirely — CFG is trivial |
+| **evm_mlir** | LambdaClass's MLIR-based AOT compiler | Full CFG + dominator tree + SSA |
+| **EOF** | New bytecode format ([EIP-3540](https://eips.ethereum.org/EIPS/eip-3540) family) | Eliminates dynamic jumps entirely — CFG is trivial |
 
 ## Exercises
 

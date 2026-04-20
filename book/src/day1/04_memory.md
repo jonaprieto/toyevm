@@ -14,11 +14,39 @@ The quadratic term makes large memory allocations progressively expensive. This 
 
 ## Key operations
 
-| Operation | EVM opcode | What it does |
-|-----------|-----------|--------------|
-| `store_u256(offset, value)` | `MSTORE` | Write 32 bytes at offset (big-endian) |
-| `load_u256(offset)` | `MLOAD` | Read 32 bytes from offset |
-| `store_byte(offset, value)` | `MSTORE8` | Write 1 byte at offset |
+### MSTORE — write 32 bytes to memory
+
+`MSTORE` pops an offset and a value from the stack, then writes the 32-byte big-endian representation of the value at that offset in memory.
+
+```
+Before:  Stack [ ..., 0x2A, 0x00 ]  ← 0x00 (offset) is on top
+MSTORE: pop offset (0x00), pop value (0x2A)
+        write 32 bytes of 0x2A at memory[0x00..0x20]
+After:   Stack [ ... ]
+         Memory[0x00..0x20] = 0x000...002A
+```
+
+### MLOAD — read 32 bytes from memory
+
+`MLOAD` pops an offset, reads 32 bytes from memory, and pushes the result as a U256.
+
+```
+Before:  Stack [ ..., 0x00 ]  ← offset on top
+MLOAD: pop offset (0x00), read memory[0x00..0x20]
+After:   Stack [ ..., 0x2A ]  ← value loaded from memory
+```
+
+### MSTORE8 — write a single byte to memory
+
+`MSTORE8` pops an offset and a value, then writes only the **lowest byte** of the value at the offset.
+
+```
+Before:  Stack [ ..., 0xFF, 0x05 ]  ← 0x05 (offset) is on top
+MSTORE8: pop offset (0x05), pop value (0xFF)
+         write byte 0xFF at memory[0x05]
+After:   Stack [ ... ]
+         Memory[0x05] = 0xFF
+```
 
 Note that `MLOAD` and `MSTORE` always read/write exactly **32 bytes**, but the offset can be any byte position — it does not need to be word-aligned. Reading from offset 1 reads bytes [1, 33) — this is a quirk that catches people.
 
