@@ -1,6 +1,6 @@
 # The Call Stack
 
-When one contract calls another, the EVM creates a new **call frame** — a fresh execution environment with its own stack, memory, and program counter. The original frame is suspended until the sub-call returns.
+When one contract calls another, the EVM creates a new **call frame** — a fresh execution environment with its own stack, memory, and program counter. The original frame is suspended until the sub-call returns. Working through this was where things started clicking for me.
 
 ```mermaid
 sequenceDiagram
@@ -26,7 +26,7 @@ sequenceDiagram
 
 ### CALL — standard call
 
-Creates a new execution context. `msg.sender` is the calling contract, storage access is scoped to the callee, and ETH can be transferred.
+This creates a new execution context. `msg.sender` is the calling contract, storage access is scoped to the callee, and ETH can be transferred.
 
 ```
 Before:  Stack [ ..., retSize, retOff, argSize, argOff, value, addr, gas ]
@@ -36,7 +36,7 @@ After:   Stack [ ..., success ]  ← 1 if callee returned, 0 if it reverted
 
 ### DELEGATECALL — call with caller's context
 
-The foundation of the **proxy pattern**. The callee's code runs in the caller's storage context. `msg.sender` and `msg.value` are preserved from the original call. This is how upgradeable contracts work — the proxy's storage is modified by the implementation's logic.
+This is the foundation of the **proxy pattern**. The callee's code runs in the caller's storage context. `msg.sender` and `msg.value` are preserved from the original call. I found this is how upgradeable contracts work — the proxy's storage is modified by the implementation's logic.
 
 ```
 Before:  Stack [ ..., retSize, retOff, argSize, argOff, addr, gas ]
@@ -50,7 +50,7 @@ When Contract A DELEGATECALLs Contract B, B's code writes to A's storage slots. 
 
 ### STATICCALL — read-only call
 
-A read-only call. Any opcode that modifies state (`SSTORE`, `LOG0`–`LOG4`, `CREATE`, `CREATE2`, `CALL` with non-zero value, and `SELFDESTRUCT`) will revert the sub-call. Used for view functions and safe external reads.
+A read-only call. Any opcode that modifies state (`SSTORE`, `LOG0`–`LOG4`, `CREATE`, `CREATE2`, `CALL` with non-zero value, and `SELFDESTRUCT`) will revert the sub-call. I use this for view functions and safe external reads.
 
 ```
 Before:  Stack [ ..., retSize, retOff, argSize, argOff, addr, gas ]
@@ -60,7 +60,7 @@ After:   Stack [ ..., success ]  ← reverts if callee tries to write state
 
 ## The 63/64 Rule (EIP-150)
 
-Before EIP-150, a contract could forward all its remaining gas to a sub-call. This enabled gas-exhaustion attacks: a malicious contract could create deeply nested calls, each consuming almost all gas, leaving the caller with nothing.
+Before EIP-150, a contract could forward all its remaining gas to a sub-call. This enabled gas-exhaustion attacks: a malicious contract could create deeply nested calls, each consuming almost all gas, leaving the caller with nothing. Once I understood this, the fix made immediate sense.
 
 EIP-150 limits forwarded gas to **63/64 of remaining gas**:
 
@@ -71,11 +71,11 @@ let max_forward = gas_remaining - gas_remaining / 64;
 let actual = gas_requested.min(max_forward);
 ```
 
-This ensures the caller always retains at least 1/64 of its gas after a sub-call, making gas accounting predictable.
+This ensures the caller always retains at least 1/64 of its gas after a sub-call, which makes gas accounting predictable.
 
 ## Depth limit
 
-The call depth is limited to **1024**. The 1025th nested call fails immediately. Combined with the 63/64 rule, this makes deep call tree attacks doubly impractical.
+The call depth is limited to **1024**. The 1025th nested call fails immediately. Combined with the 63/64 rule, I noticed this makes deep call tree attacks doubly impractical.
 
 ## Call frame lifecycle
 
@@ -84,7 +84,7 @@ The call depth is limited to **1024**. The 1025th nested call fails immediately.
 3. **Pop frame**: restore caller's state, copy return data
 4. **Result**: caller reads success/failure and return data
 
-If the sub-call reverts, the caller's state is untouched — only the sub-call's changes are discarded.
+If the sub-call reverts, the caller's state is untouched — only the sub-call's changes are discarded. Implementing this correctly took me a couple of iterations.
 
 ## Precompiles
 
@@ -97,7 +97,7 @@ Addresses 0x1 through 0x9 are **precompiled contracts** — built-in functions w
 | 0x3 | RIPEMD-160 | 600 + 120/word |
 | 0x4 | identity (memcpy) | 15 + 3/word |
 
-Precompiles look like regular CALLs but are handled specially by the interpreter — no bytecode is executed.
+Precompiles look like regular CALLs but are handled specially by the interpreter — no bytecode is executed. I wired them in as a dispatch table in the host layer.
 
 ## Exercises
 

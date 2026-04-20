@@ -1,10 +1,10 @@
 # Gas: The EVM's Resource Model
 
-Gas is the EVM's mechanism for bounding computation. Every opcode has a cost, and every transaction starts with a finite gas budget. When gas runs out, execution halts immediately.
+Gas is the EVM's mechanism for bounding computation. Every opcode has a cost, and every transaction starts with a finite gas budget. What I found surprising is how abruptly execution halts when gas runs out — there's no graceful winding down.
 
 ## Why gas exists
 
-Without gas, a contract could loop forever, and every Ethereum node would be stuck executing it. Gas solves the halting problem pragmatically: you can run any computation you want, as long as you can pay for it.
+Without gas, a contract could loop forever, and every Ethereum node would be stuck executing it. I think of gas as a pragmatic solution to the halting problem: you can run any computation you want, as long as you can pay for it.
 
 ## Static vs. dynamic costs
 
@@ -28,7 +28,7 @@ Without gas, a contract could loop forever, and every Ethereum node would be stu
 
 $$C_{mem}(a) = 3a + \left\lfloor \frac{a^2}{512} \right\rfloor$$
 
-At small sizes, this is essentially linear (3 gas per 32-byte word). But the quadratic term kicks in at scale:
+At small sizes, this is essentially linear (3 gas per 32-byte word). But the quadratic term kicks in at scale — I plotted a few values to feel it:
 
 | Words | Bytes | Gas cost |
 |-------|-------|----------|
@@ -38,11 +38,11 @@ At small sizes, this is essentially linear (3 gas per 32-byte word). But the qua
 | 1000 | 32,000 | 4,953 |
 | 10000 | 320,000 | 225,312 |
 
-This makes large memory allocations prohibitively expensive — by design.
+Large memory allocations end up prohibitively expensive — and that's entirely by design.
 
 ## Out-of-gas vs. REVERT
 
-Both halt execution and discard state changes, but they differ in gas refunds:
+Both halt execution and discard state changes, but I had to work through how they differ in gas refunds:
 
 | | Out-of-gas | REVERT |
 |---|-----------|--------|
@@ -50,7 +50,7 @@ Both halt execution and discard state changes, but they differ in gas refunds:
 | Remaining gas | **All consumed** | **Refunded to caller** |
 | Return data | Empty | Can include error message |
 
-This distinction matters for smart contract design: a well-written contract should `REVERT` with an error message rather than running out of gas silently.
+This distinction matters for smart contract design: I now appreciate why a well-written contract should `REVERT` with an error message rather than running out of gas silently.
 
 ```admonish tip title="Rust Pattern: Result<T, E>"
 We model execution outcomes as `Result<ExecutionResult, EvmError>`. A successful `REVERT` returns `Ok(ExecutionResult { reverted: true, .. })` — it's not an `Err`, because the interpreter completed successfully; it's the *contract* that chose to revert.

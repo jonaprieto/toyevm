@@ -1,6 +1,6 @@
 # Bytecode and the Execution Loop
 
-Today we bring the EVM to life. By the end of this chapter, our interpreter will execute arithmetic bytecode, track gas consumption, and return results — a complete fetch-decode-execute loop.
+Today we bring the EVM to life. By the end of this chapter, I want our interpreter to execute arithmetic bytecode, track gas consumption, and return results — a complete fetch-decode-execute loop.
 
 ## How bytecode works
 
@@ -8,7 +8,7 @@ EVM bytecode is a flat array of bytes. Each byte is either:
 - An **opcode** (a single-byte instruction), or
 - An **immediate** byte following a PUSH instruction
 
-The program counter (μ_pc in the Yellow Paper) starts at 0 and advances linearly. When the interpreter encounters `PUSH3`, it reads the opcode byte, then consumes the next 3 bytes as the immediate value, advancing the PC by 4 total (1 + 3).
+The program counter (μ_pc in the Yellow Paper) starts at 0 and advances linearly. When the interpreter encounters `PUSH3`, it needs to read the opcode byte, then consume the next 3 bytes as the immediate value, advancing the PC by 4 total (1 + 3).
 
 Example bytecode: `60 03 60 05 01 00`
 
@@ -39,7 +39,7 @@ flowchart TD
     F -- Yes --> H["Return result"]
 ```
 
-Our interpreter follows the classic pattern:
+I found that our interpreter follows the classic pattern:
 
 ```
 loop {
@@ -59,7 +59,7 @@ The loop terminates when:
 
 ## Dispatch: match vs. HashMap
 
-We use a Rust `match` on a `repr(u8)` enum rather than a `HashMap<u8, fn()>`. Why?
+I went with a Rust `match` on a `repr(u8)` enum rather than a `HashMap<u8, fn()>`. Why?
 
 - The compiler generates a **jump table** — a single indexed memory access, O(1)
 - No heap allocation, no hashing overhead
@@ -68,6 +68,6 @@ We use a Rust `match` on a `repr(u8)` enum rather than a `HashMap<u8, fn()>`. Wh
 
 ## PUSH1 through PUSH32
 
-The PUSH family is special: each opcode is followed by 1-32 immediate bytes that form the value to push. The bytes are read in **big-endian** order and right-aligned into a 32-byte U256.
+The PUSH family is special: each opcode is followed by 1-32 immediate bytes that form the value to push. I noticed the bytes are read in **big-endian** order and right-aligned into a 32-byte U256.
 
 All PUSH opcodes cost the same gas (3, the "very low" tier). The immediate bytes are not separate instructions — they're data embedded in the bytecode stream.

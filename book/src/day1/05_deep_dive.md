@@ -1,6 +1,6 @@
 # Deep Dive — Day 1
 
-These are questions you might encounter when discussing EVM internals. Try to answer each question before expanding the answer.
+These are questions I asked myself after implementing Day 1. Try to answer each question before expanding the answer.
 
 ---
 

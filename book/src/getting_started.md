@@ -1,6 +1,6 @@
 # Getting Started
 
-## Tools you need
+## Tools
 
 | Tool | Required? | Install |
 |------|----------|---------|
@@ -17,7 +17,7 @@ cd toyevm
 
 ## Start Day 1
 
-The `day-1-start` branch has the project structure with **stub files** — all type definitions and method signatures are in place, but every function body is `todo_exercise!()`. Your job is to implement them.
+The `day-1-start` branch has the project structure with **stub files** — all type definitions and method signatures are in place, but every function body is `todo_exercise!()`. The work is to fill them in.
 
 ```bash
 git checkout day-1-start
@@ -48,7 +48,7 @@ pub fn wrapping_add(self, _rhs: Self) -> Self {
 }
 ```
 
-Each stub has the correct signature — your job is to replace `todo_exercise!(...)` with a real implementation.
+Each stub has the correct signature — the work is replacing `todo_exercise!(...)` with a real implementation.
 
 ## Run the tests
 
@@ -56,7 +56,7 @@ Each stub has the correct signature — your job is to replace `todo_exercise!(.
 cargo test
 ```
 
-You will see failing tests, each with a hint:
+Failing tests show hints:
 
 ```
 ---- types::u256::tests::ex_1_2_simple_add ----
@@ -68,18 +68,18 @@ test result: FAILED. 4 passed; 33 failed; 0 ignored
 
 Implement until all tests pass.
 
-## Compare your solution
+## Compare with the reference
 
-Once your tests pass, see how your implementation compares to the reference:
+Once tests pass, see how your implementation compares to mine:
 
 ```bash
 git diff day-1 -- src/
 ```
 
-This shows the exact differences between your code and the reference solution. You might find a more elegant approach — or discover edge cases you hadn't considered.
+This shows the exact differences between your code and the reference solution. You might find a more elegant approach — or discover edge cases you had not considered.
 
 ```admonish tip title="Reading the reference without diffing"
-If you want to peek at the full reference solution at any point:
+To peek at the full reference solution at any point:
 `git show day-1:src/types/u256.rs` (shows the file without switching branches)
 ```
 
@@ -89,7 +89,7 @@ If you want to peek at the full reference solution at any point:
 git checkout -b my-day-2 my-day-1    # branch from your completed Day 1
 ```
 
-For Days 2–7, the exercise chapter in this book provides stub code to paste into new files. The pattern is always:
+For Days 2–7, the exercise chapter provides stub code to paste into new files. The pattern is always:
 
 1. Create the stub files shown in the "Exercise Setup" section
 2. `cargo test` — new tests fail
@@ -114,31 +114,31 @@ Solution branches `day-1` through `day-7` are *stacked snapshots* — each conta
 
 ## How each day works
 
-Each day has three parts in this book:
+Each day has three parts:
 
-1. **Theory** — what the EVM concept is and why it matters, with Rust code snippets pulled directly from the source files
-2. **Exercises** — a list of exercises with the file to edit, the `cargo test` command to verify, and a hint
-3. **Deep Dive** — Q&A that tests your understanding of the concepts
+1. **Notes** — what I learned about the concept, with Rust code pulled directly from the source files
+2. **Exercises** — how I tested my understanding, with `cargo test` commands and hints
+3. **Deep Dive** — questions I asked myself and worked through after implementing
 
-The recommended workflow:
+The workflow I followed:
 
 ```
-Read the theory chapter
+Read the notes
     ↓
-Look at the exercise list
+Look at the exercises
     ↓
 Open the source file, read the tests
     ↓
-Implement (or study the reference implementation)
+Implement (or study the reference)
     ↓
 cargo test — verify
     ↓
-Read the Deep Dive questions, try to answer before reading
+Work through the Deep Dive questions
 ```
 
 ## Running Solidity examples
 
-The repository includes a [Foundry](https://getfoundry.sh/) project in `examples/` with six Solidity contracts. As you progress through the days, your interpreter gains enough opcodes to execute them — each is a milestone that proves your EVM actually works.
+The repository includes a [Foundry](https://getfoundry.sh/) project in `examples/` with six Solidity contracts. As you progress through the days, the interpreter gains enough opcodes to execute them — each is a milestone that proves the EVM actually works.
 
 | Contract | What it does | Runnable after |
 |----------|-------------|----------------|

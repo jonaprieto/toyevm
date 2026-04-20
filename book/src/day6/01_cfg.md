@@ -1,6 +1,6 @@
 # From Bytecode to IR: Control Flow Graphs
 
-Today we shift from executing bytecode to **analyzing** it. We lift the flat byte stream into a structured intermediate representation (IR) of basic blocks connected by control flow edges.
+On Day 6 I shifted from executing bytecode to **analyzing** it. We lift the flat byte stream into a structured intermediate representation (IR) of basic blocks connected by control flow edges.
 
 ## Why analyze bytecode?
 
@@ -19,7 +19,7 @@ A **basic block** is a maximal sequence of instructions with:
 - **No internal jumps** — if the first instruction executes, all instructions in the block execute
 
 ```admonish note title="Why basic blocks matter"
-Because all instructions in a block execute together, you can reason about the block's effect as a single atomic operation: "this block pops 2 values and pushes 1." This net-effect summary is what enables optimization passes to work at scale without analyzing individual instructions across control flow boundaries.
+Because all instructions in a block execute together, we can reason about the block's effect as a single atomic operation: "this block pops 2 values and pushes 1." This net-effect summary is what enables optimization passes to work at scale without analyzing individual instructions across control flow boundaries.
 ```
 
 A **leader** (the first instruction of a block) is identified by three rules:
@@ -84,7 +84,7 @@ EVM jumps are technically **dynamic** — the destination is a value popped from
 | **Handwritten (Huff)** | May compute destinations dynamically — requires abstract interpretation |
 | **EOF (EVM Object Format)** | `RJUMP`/`RJUMPI` with relative offsets — always static, no JUMPDEST needed |
 
-Our CFG builder looks for the simplest pattern — a `PUSH` immediately before `JUMP`/`JUMPI`:
+My CFG builder looks for the simplest pattern — a `PUSH` immediately before `JUMP`/`JUMPI`:
 
 ```rust
 fn resolve_static_jump(&self, block_id: BlockId) -> Option<usize> {
@@ -97,12 +97,12 @@ fn resolve_static_jump(&self, block_id: BlockId) -> Option<usize> {
 ```
 
 ```admonish warning title="Limitation: Non-Adjacent PUSH"
-If a DUP or SWAP separates the PUSH from the JUMP (common in function dispatch tables), our resolver returns `None` and the edge is missing from the CFG. A production analyzer would track the stack symbolically to resolve these cases.
+If a DUP or SWAP separates the PUSH from the JUMP (common in function dispatch tables), my resolver returns `None` and the edge is missing from the CFG. A production analyzer would track the stack symbolically to resolve these cases.
 ```
 
 ## Stack height analysis
 
-We track the stack height at the entry and exit of each block — a **forward dataflow analysis**.
+I track the stack height at the entry and exit of each block — a **forward dataflow analysis**.
 
 ### The algorithm
 
@@ -118,7 +118,7 @@ Each block is processed at most once (we skip if already in `entry_height`). Wit
 
 ### At join points
 
-When two blocks both flow into the same successor, the successor should have the *same* stack height from both paths — the EVM specification requires this. Our simplified analysis takes the first height it sees and ignores conflicts. A production verifier would check that all incoming heights agree and reject the bytecode if they don't.
+When two blocks both flow into the same successor, the successor should have the *same* stack height from both paths — the EVM specification requires this. My simplified analysis takes the first height it sees and ignores conflicts. A production verifier would check that all incoming heights agree and reject the bytecode if they don't.
 
 ## Use/def sets
 
@@ -147,7 +147,7 @@ Example: `POP, STOP`
 
 ## Liveness (block reachability)
 
-Our "liveness" analysis determines which *blocks* are live — reachable from entry AND can reach an exit. This is two BFS passes:
+My "liveness" analysis determines which *blocks* are live — reachable from entry AND can reach an exit. This is two BFS passes:
 
 1. **Forward BFS** from entry → `reachable_from_entry`
 2. **Backward BFS** from exit blocks (STOP/RETURN/REVERT) → `can_reach_exit`

@@ -1,6 +1,6 @@
 # Optimization Passes
 
-Today we close the loop: we take the CFG from Day 6 and transform it. Two classic optimization passes — constant folding and dead code elimination — demonstrate the fundamental techniques that production compilers like `evm_mlir` use at scale. We also explore how to make the interpreter itself faster — the techniques that separate a naive EVM from a production one.
+On Day 7 I closed the loop: we take the CFG from Day 6 and transform it. Two classic optimization passes — constant folding and dead code elimination — demonstrate the fundamental techniques that production compilers like `evm_mlir` use at scale. I also explored how to make the interpreter itself faster — the techniques that separate a naive EVM from a production one.
 
 ## The OptimizationPass trait
 
@@ -16,7 +16,7 @@ pub trait OptimizationPass {
 This enables **fixed-point iteration**: run all passes in a loop until none of them make changes. The trait is the standard pattern for composable compiler passes — LLVM, GCC, and Cranelift all use variations of this interface.
 
 ```admonish tip title="Rust Pattern: Trait Objects for Passes"
-You can collect passes into a `Vec<Box<dyn OptimizationPass>>` and iterate over them generically. This decouples the pass manager from the individual passes — adding a new optimization requires no changes to the driver loop.
+We can collect passes into a `Vec<Box<dyn OptimizationPass>>` and iterate over them generically. This decouples the pass manager from the individual passes — adding a new optimization requires no changes to the driver loop.
 ```
 
 ## Constant Folding
@@ -46,7 +46,7 @@ Consider: `PUSH1 2, PUSH1 3, MUL, PUSH1 4, MUL`. The first pass folds `(2, 3, MU
 The fixed-point loop terminates because each iteration strictly reduces the instruction count (three instructions become one). With $N$ instructions, at most $N/2$ folds can occur, so the loop terminates in $O(N)$ iterations.
 
 ```admonish warning title="Pitfall: Division by Zero in Folding"
-When folding `PUSH 5, PUSH 0, DIV`, the result must match the EVM specification: division by zero returns zero (not a panic). Your `evaluate_binop` function must handle this case explicitly.
+When folding `PUSH 5, PUSH 0, DIV`, the result must match the EVM specification: division by zero returns zero (not a panic). The `evaluate_binop` function must handle this case explicitly.
 ```
 
 ## Dead Code Elimination
@@ -70,7 +70,7 @@ Even if static analysis cannot prove the entry block reaches an exit (e.g., all 
 
 ## Making the interpreter faster
 
-Our interpreter works correctly, but it is far from optimal. Production EVMs like [revm](https://github.com/bluealloy/revm) use several techniques to minimize per-opcode overhead. These are the techniques that matter most, ordered by impact.
+My interpreter works correctly, but it is far from optimal. Production EVMs like [revm](https://github.com/bluealloy/revm) use several techniques to minimize per-opcode overhead. These are the techniques that matter most, ordered by impact.
 
 ### 1. JUMPDEST bitmap pre-computation
 
@@ -161,7 +161,7 @@ Production interpreters like CPython and LuaJIT use superinstructions extensivel
 
 ## AOT Compilation (discussion)
 
-Our optimizer works on the IR but still outputs bytecode for the interpreter. The next step would be **ahead-of-time compilation**: transpile the CFG into native machine code.
+My optimizer works on the IR but still outputs bytecode for the interpreter. The next step would be **ahead-of-time compilation**: transpile the CFG into native machine code.
 
 This is exactly what [LambdaClass's evm_mlir](https://blog.lambdaclass.com/evm-performance-boosts-with-mlir/) does:
 

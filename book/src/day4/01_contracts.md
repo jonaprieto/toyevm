@@ -1,14 +1,14 @@
 # Contracts, Deployment, and the Host Trait
 
-Today we cross the boundary from a single-contract interpreter to a system that can create contracts, emit logs, and interact with external state.
+Today I crossed the boundary from a single-contract interpreter to a system that can create contracts, emit logs, and interact with external state.
 
 ## CREATE and CREATE2
 
-When a contract creates another contract, the EVM needs to determine the new contract's address:
+When a contract creates another contract, the EVM needs to determine the new contract's address. Here is what I found:
 
 **CREATE**: $\text{addr} = \text{keccak256}(\text{rlp}([\text{sender}, \text{nonce}]))[12{:}]$
 
-The address depends on the sender and their nonce (a counter that increments with each CREATE). This means the address is predictable only if you know the current nonce.
+The address depends on the sender and their nonce (a counter that increments with each CREATE). The address is predictable only if you know the current nonce.
 
 **CREATE2**: $\text{addr} = \text{keccak256}(\texttt{0xff} \| \text{sender} \| \text{salt} \| \text{keccak256}(\text{initcode}))[12{:}]$
 
@@ -19,7 +19,7 @@ CREATE2 (EIP-1014) adds a `salt` parameter, making the address deterministic —
 
 ## Initcode vs. Runtime Code
 
-When you deploy a contract, you don't send the runtime bytecode directly. You send **initcode** — a program that executes once and whose RETURN value becomes the deployed code.
+When deploying a contract, you don't send the runtime bytecode directly. You send **initcode** — a program that executes once and whose RETURN value becomes the deployed code.
 
 ```
 Transaction: { to: null, data: initcode }
@@ -28,11 +28,11 @@ Transaction: { to: null, data: initcode }
   → bytes at memory[offset..offset+size] become the deployed code
 ```
 
-This is why Solidity constructors can run arbitrary logic — they're part of the initcode.
+This is why Solidity constructors can run arbitrary logic — they are part of the initcode.
 
 ## The Host Trait
 
-The interpreter needs to access external state: other contracts' code, account balances, etc. We use the **Host trait** to decouple the interpreter from state management:
+The interpreter needs to access external state: other contracts' code, account balances, etc. I used the **Host trait** to decouple the interpreter from state management:
 
 ```rust
 pub trait Host {
@@ -44,7 +44,7 @@ pub trait Host {
 }
 ```
 
-For testing, `MockHost` implements this trait with HashMaps. In production, a real Host would read from a Merkle trie.
+For testing, I implemented `MockHost` with HashMaps. In production, a real Host would read from a Merkle trie.
 
 ```admonish tip title="Rust Pattern: Trait Objects"
 The `Host` trait enables *inversion of control*. The interpreter calls `host.code(addr)` without knowing whether it's backed by a HashMap (testing) or a Merkle trie (production). This is the same pattern `revm` uses.
@@ -74,7 +74,7 @@ Gas cost: $375 + 8 \times \text{data\_length} + 375 \times \text{num\_topics}$
 | `LOG3` | 3 | $375 + 256 + 1125 = 1756$ |
 | `LOG4` | 4 | $375 + 256 + 1500 = 2131$ |
 
-Logs are not accessible from within the EVM — they are write-only. Off-chain clients read them via the JSON-RPC `eth_getLogs` API.
+Logs are not accessible from within the EVM — they are write-only. Off-chain clients read them via the JSON-RPC `eth_getLogs` API. I found this asymmetry easy to overlook at first.
 
 ## Exercises
 

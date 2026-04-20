@@ -4,7 +4,7 @@ The **Ethereum Virtual Machine** (EVM) is a deterministic, stack-based virtual m
 
 ## The mental model
 
-Think of the EVM as a sandboxed calculator with three scratch spaces:
+I found it helpful to think of the EVM as a sandboxed calculator with three scratch spaces:
 
 ```mermaid
 graph LR
@@ -30,7 +30,7 @@ The EVM reads **bytecode** — a sequence of single-byte opcodes, some followed 
 
 ## Why 256-bit words?
 
-Ethereum chose 256-bit (32-byte) words for several reasons:
+One of the first things I wondered was why Ethereum chose 256-bit (32-byte) words. There are a few reasons:
 
 - **Keccak-256** is the hashing algorithm used throughout Ethereum. Its output is 32 bytes, so stack values can hold a full hash.
 - **Addresses** are 20 bytes — they fit comfortably in a 32-byte word.
@@ -61,9 +61,9 @@ The execution model is a pure function:
 
 Where `I` is the execution environment (caller, value, bytecode, etc.). Given the same inputs, the outputs are always the same. No randomness, no system calls, no I/O.
 
-## What we'll build today
+## What we build on Day 1
 
-Today we implement the three core data structures without writing a single opcode. These are the substrate the interpreter will live in:
+On Day 1 we implement the three core data structures without writing a single opcode. These are the substrate the interpreter will live in:
 
 | Module | File | What it is |
 |--------|------|------------|

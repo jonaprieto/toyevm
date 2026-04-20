@@ -1,6 +1,6 @@
 # The Stack
 
-The EVM stack is a Last-In-First-Out (LIFO) data structure holding up to **1024** values of type `U256`. Almost every opcode reads from or writes to the stack.
+The first thing I needed was a stack — a Last-In-First-Out (LIFO) data structure holding up to **1024** values of type `U256`. Almost every opcode reads from or writes to the stack.
 
 ## Why 1024?
 
@@ -8,7 +8,7 @@ The depth limit prevents stack-overflow attacks. Without it, a malicious contrac
 
 ## Operations
 
-The stack supports four fundamental operations. Let's walk through each one with a concrete example.
+The stack supports four fundamental operations. Here is how I worked through each one with a concrete example.
 
 ### push — place a value on top
 
@@ -96,15 +96,15 @@ There are exactly two failure modes:
 
 ## Implementation
 
-We use a `Vec<U256>` internally rather than a fixed `[U256; 1024]` array:
+I use a `Vec<U256>` internally rather than a fixed `[U256; 1024]` array:
 
 ```rust
 {{#include ../../../src/stack.rs:stack_struct}}
 ```
 
-Why `Vec`?
+Why `Vec`? I considered a fixed `[U256; 1024]` array, but:
 
-- Starts small (pre-allocate 64 slots) and grows as needed
+- `Vec` starts small (pre-allocate 64 slots) and grows as needed
 - A fixed `[U256; 1024]` array would allocate 32 KB on every stack creation, even for contracts that use 3 stack slots
 - The overflow check is a simple `len >= 1024` comparison either way
 

@@ -1,6 +1,6 @@
 # Deep Dive — Day 7
 
-Try to answer each question before expanding the answer.
+Questions I worked through after implementing Day 7.
 
 ---
 
@@ -38,10 +38,10 @@ It lifts EVM bytecode into an [MLIR](https://mlir.llvm.org/) dialect where each 
 
 ---
 
-**Q: What is a superinstruction and when would you design one?**
+**Q: What is a superinstruction and when would I design one?**
 
 ```admonish note title="Answer" collapsible=true
-A superinstruction is a compound opcode that implements a common multi-opcode sequence as a single dispatch. Example: `PUSH1 x, PUSH1 y, ADD` → `PUSHADD x y`. Benefits: reduces dispatch loop iterations (each dispatch has overhead from the fetch-decode-match cycle), enables the compiler to optimize the combined operation (e.g., avoid pushing x just to pop it immediately), and reduces code size. You design one when profiling shows a sequence appears frequently in real contracts and the dispatch overhead is measurable. CPython, LuaJIT, and Java's HotSpot all use superinstructions.
+A superinstruction is a compound opcode that implements a common multi-opcode sequence as a single dispatch. Example: `PUSH1 x, PUSH1 y, ADD` → `PUSHADD x y`. Benefits: reduces dispatch loop iterations (each dispatch has overhead from the fetch-decode-match cycle), enables the compiler to optimize the combined operation (e.g., avoid pushing x just to pop it immediately), and reduces code size. I'd design one when profiling shows a sequence appears frequently in real contracts and the dispatch overhead is measurable. CPython, LuaJIT, and Java's HotSpot all use superinstructions.
 ```
 
 ---

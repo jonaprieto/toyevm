@@ -1,13 +1,13 @@
 # Deep Dive — Day 6
 
-Try to answer each question before expanding the answer.
+Questions I worked through after implementing Day 6.
 
 ---
 
 **Q: What is a basic block and why is it the unit of compiler analysis?**
 
 ```admonish note title="Answer" collapsible=true
-A basic block is a maximal straight-line sequence of instructions — one entry point, one exit point, no internal branches. If the first instruction executes, all instructions execute. This property lets you summarize the block's effect as a single net operation (e.g., "pops 2, pushes 1, writes storage slot X") without reasoning about conditional paths. Every optimization pass — from constant folding to register allocation — operates on or between basic blocks.
+A basic block is a maximal straight-line sequence of instructions — one entry point, one exit point, no internal branches. If the first instruction executes, all instructions execute. This property lets us summarize the block's effect as a single net operation (e.g., "pops 2, pushes 1, writes storage slot X") without reasoning about conditional paths. Every optimization pass — from constant folding to register allocation — operates on or between basic blocks.
 
 See [Dragon Book §8.4](https://en.wikipedia.org/wiki/Basic_block) for the classic textbook treatment.
 ```
@@ -19,7 +19,7 @@ See [Dragon Book §8.4](https://en.wikipedia.org/wiki/Basic_block) for the class
 ```admonish note title="Answer" collapsible=true
 Three steps:
 
-1. **Find leaders** — scan linearly, marking offset 0, every JUMPDEST, and every instruction after a terminator (JUMP/JUMPI/STOP/RETURN/REVERT). You must skip PUSH immediate bytes to avoid misidentifying a 0x5B byte inside a PUSH32 as a JUMPDEST.
+1. **Find leaders** — scan linearly, marking offset 0, every JUMPDEST, and every instruction after a terminator (JUMP/JUMPI/STOP/RETURN/REVERT). We must skip PUSH immediate bytes to avoid misidentifying a 0x5B byte inside a PUSH32 as a JUMPDEST.
 
 2. **Extract blocks** — split the bytecode at leader boundaries. Each block gets an ID, a start/end offset, and a list of decoded instructions.
 
@@ -88,12 +88,12 @@ Value-level liveness requires tracking individual stack slots through DUP/SWAP o
 3. **Padded bytecode**: the bytecode array is extended with STOP bytes so the interpreter doesn't need bounds checks on every PC advance
 4. **`repr(u8)` dispatch**: the opcode match compiles to a jump table — O(1) branch prediction-friendly dispatch
 
-These are all techniques you'd discover by profiling: the interpreter loop is the hottest code in an Ethereum node, and every nanosecond per opcode matters when processing millions of transactions.
+These are all techniques I discovered by profiling: the interpreter loop is the hottest code in an Ethereum node, and every nanosecond per opcode matters when processing millions of transactions.
 ```
 
 ---
 
-**Q: What would it take to go from your CFG to native code?**
+**Q: What would it take to go from our CFG to native code?**
 
 ```admonish note title="Answer" collapsible=true
 Four additional passes:

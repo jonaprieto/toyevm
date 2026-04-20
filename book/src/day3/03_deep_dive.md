@@ -1,6 +1,6 @@
 # Deep Dive — Day 3
 
-Try to answer each question before expanding the answer.
+Questions I worked through after implementing Day 3. Try to answer each one before expanding.
 
 ---
 

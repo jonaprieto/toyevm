@@ -1,6 +1,6 @@
 # Memory
 
-EVM memory is a **byte-addressable**, dynamically expanding linear array. Unlike storage (which persists between transactions), memory is **ephemeral** — it exists only for the duration of a single execution context.
+EVM memory is a **byte-addressable**, dynamically expanding linear array. Unlike storage (which persists between transactions), memory is **ephemeral** — it exists only for the duration of a single execution context. This was one of the distinctions I had to be careful to internalize early.
 
 ## Expansion semantics
 
@@ -48,7 +48,7 @@ After:   Stack [ ... ]
          Memory[0x05] = 0xFF
 ```
 
-Note that `MLOAD` and `MSTORE` always read/write exactly **32 bytes**, but the offset can be any byte position — it does not need to be word-aligned. Reading from offset 1 reads bytes [1, 33) — this is a quirk that catches people.
+Note that `MLOAD` and `MSTORE` always read/write exactly **32 bytes**, but the offset can be any byte position — it does not need to be word-aligned. Reading from offset 1 reads bytes [1, 33) — a quirk that caught me off guard at first.
 
 ```admonish warning title="Pitfall: Memory Offset Alignment"
 A common mistake is assuming `MLOAD`/`MSTORE` require 32-byte-aligned offsets. They don't — `MLOAD(1)` reads bytes `[1, 33)`, overlapping two "words." This matters when reasoning about memory layout.
