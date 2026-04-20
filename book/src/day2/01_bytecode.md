@@ -66,6 +66,22 @@ I went with a Rust `match` on a `repr(u8)` enum rather than a `HashMap<u8, fn()>
 - The `match` is exhaustive — the compiler ensures every opcode variant is handled
 - In production EVMs like `revm`, dispatch is the hottest code path; every nanosecond matters
 
+```admonish tip title="Beyond a simple enum: OpCodeInfo"
+Our `Opcode` enum maps each byte to a name, plus an `immediate_size()` method. A production EVM would attach more metadata per opcode — something like:
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `name` | `&str` | Disassembly output |
+| `immediate_size` | `u8` | Bytes following the opcode (0 for all but PUSH) |
+| `min_stack` | `u8` | Minimum stack depth to execute |
+| `stack_increase` | `u8` | Net stack growth after execution |
+| `static_gas` | `u32` | Base gas cost |
+| `dynamic_gas` | `bool` | Whether runtime gas is also needed |
+| `index` | `u8` | N for PUSHN/DUPN/SWAPN/LOGN, 0 otherwise |
+
+This `OpCodeInfo` struct lets the interpreter validate stack depth and deduct gas *before* dispatching — no need to check inside each handler. We keep it simple here, but this is the direction `revm` and `evmone` take.
+```
+
 ## PUSH1 through PUSH32
 
 The PUSH family is special: each opcode is followed by 1-32 immediate bytes that form the value to push. I noticed the bytes are read in **big-endian** order and right-aligned into a 32-byte U256.
