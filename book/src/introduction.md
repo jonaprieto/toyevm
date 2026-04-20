@@ -2,7 +2,7 @@
 
 I wanted to understand the Ethereum Virtual Machine — not at the Solidity level, but at the opcode level. How does a `JUMP` actually work? Why does storage cost so much gas? What does a control flow graph look like for a `while` loop compiled to bytecode?
 
-The only way I could answer these questions was to build one myself. These are my notes from that process: an EVM interpreter built from scratch in Rust, opcode by opcode, with zero external dependencies.
+The only way I could answer these questions was to build one myself. These are my notes from that process: an EVM interpreter built from scratch in Rust, opcode by opcode, with zero external dependencies. It is a toy, obviously — but enough of one to run real Solidity contracts and get a fair understanding of what production implementations like [revm](https://github.com/bluealloy/revm) do under the hood.
 
 The material is organized into seven days. You are welcome to follow along, work through the exercises, and build your own.
 
