@@ -1,15 +1,14 @@
 //! Integration tests: run real Solidity-compiled bytecode through toyevm.
 //!
 //! These tests demonstrate feeding Foundry `forge build` output into our
-//! interpreter and observing the results — including where our toy EVM
-//! falls short and what opcodes need to be implemented next.
+//! interpreter and observing the results.
 //!
 //! To regenerate bytecode after editing the Solidity sources:
 //!   cd examples && forge build
 //!   forge inspect <Contract> deployedBytecode
 
 use toyevm::context::ContextBuilder;
-use toyevm::interpreter::{Interpreter, run_bytecode};
+use toyevm::interpreter::{run_bytecode, Interpreter};
 use toyevm::storage::Storage;
 use toyevm::types::U256;
 
@@ -20,7 +19,6 @@ const ENOUGH_GAS: u64 = 100_000;
 // ---------------------------------------------------------------------------
 
 fn hex_to_bytes(hex: &str) -> Vec<u8> {
-    // Strip optional 0x prefix.
     let hex = hex.strip_prefix("0x").unwrap_or(hex);
     (0..hex.len())
         .step_by(2)
@@ -31,7 +29,6 @@ fn hex_to_bytes(hex: &str) -> Vec<u8> {
 /// Extract just the meaningful bytecode, stripping CBOR metadata suffix.
 /// Solidity appends `a264...0033` at the end — we strip from the last INVALID (0xfe).
 fn strip_metadata(bytecode: &[u8]) -> &[u8] {
-    // Find the last 0xFE byte (INVALID opcode used as metadata marker).
     if let Some(pos) = bytecode.iter().rposition(|&b| b == 0xfe) {
         &bytecode[..pos]
     } else {
@@ -40,39 +37,16 @@ fn strip_metadata(bytecode: &[u8]) -> &[u8] {
 }
 
 // ---------------------------------------------------------------------------
-// Day 2: Return42 — arithmetic + memory + return
+// Return42 — arithmetic + memory + return (Day 2)
 // ---------------------------------------------------------------------------
 
-/// Runtime bytecode: examples/src/return42.sol
-/// Compiled: forge inspect Return42 deployedBytecode
-///
 /// ```solidity
 /// contract Return42 {
 ///     fallback() external {
-///         assembly {
-///             mstore(0x00, 42)
-///             return(0x00, 0x20)
-///         }
+///         assembly { mstore(0x00, 42); return(0x00, 0x20) }
 ///     }
 /// }
 /// ```
-///
-/// Annotated runtime bytecode (stripped of metadata):
-///   6080 6040 52      — PUSH1 0x80, PUSH1 0x40, MSTORE (free memory pointer)
-///   34                — CALLVALUE
-///   80                — DUP1
-///   15                — ISZERO
-///   600e              — PUSH1 0x0e
-///   57                — JUMPI (skip revert if no value)
-///   5f 5f fd          — PUSH0, PUSH0, REVERT
-///   5b                — JUMPDEST
-///   50                — POP
-///   602a              — PUSH1 42
-///   5f                — PUSH0
-///   52                — MSTORE
-///   6020              — PUSH1 32
-///   5f                — PUSH0
-///   f3                — RETURN
 #[test]
 fn return42_works() {
     let full = hex_to_bytes(
@@ -102,19 +76,16 @@ fn return42_reverts_with_value() {
 }
 
 // ---------------------------------------------------------------------------
-// Day 3: Store42 — storage write + read
+// Store42 — storage write + read (Day 3)
 // ---------------------------------------------------------------------------
 
-/// Runtime bytecode: examples/src/store42.sol
-/// Compiled: forge inspect Store42 deployedBytecode
-///
-/// After the callvalue check, the runtime does:
-///   602a 5f 55     — PUSH1 42, PUSH0, SSTORE (store 42 at slot 0)
-///   602a 5f 52     — PUSH1 42, PUSH0, MSTORE (store 42 in memory)
-///   6020 5f f3     — PUSH1 32, PUSH0, RETURN
-///
-/// Note: the optimizer noticed sload(0) would return 42 (just stored),
-/// so it replaced sload with the constant. Clever!
+/// ```solidity
+/// contract Store42 {
+///     fallback() external {
+///         assembly { sstore(0, 42); let v := sload(0); mstore(0x00, v); return(0x00, 0x20) }
+///     }
+/// }
+/// ```
 #[test]
 fn store42_writes_to_storage() {
     let full = hex_to_bytes(
@@ -134,20 +105,27 @@ fn store42_writes_to_storage() {
     assert!(!result.reverted);
     assert_eq!(result.output[31], 42);
 
-    // Verify storage was actually written.
     let stored = interp.storage().peek(&U256::ZERO);
     assert_eq!(stored, U256::from(42u64));
 }
 
 // ---------------------------------------------------------------------------
-// Day 3: Loop — control flow with JUMP/JUMPI
+// Loop — control flow with JUMP/JUMPI (Day 3)
 // ---------------------------------------------------------------------------
 
-/// Runtime bytecode: examples/src/loop.sol
-/// Compiled: forge inspect Loop deployedBytecode
-///
-/// Sums 1..10 = 55 using a for loop in assembly.
-/// The compiled bytecode uses JUMP/JUMPI for the loop.
+/// ```solidity
+/// contract Loop {
+///     fallback() external {
+///         assembly {
+///             let sum := 0
+///             let i := 1
+///             for {} lt(i, 11) { i := add(i, 1) } { sum := add(sum, i) }
+///             mstore(0x00, sum)
+///             return(0x00, 0x20)
+///         }
+///     }
+/// }
+/// ```
 #[test]
 fn loop_sums_1_to_10() {
     let full = hex_to_bytes(
@@ -156,69 +134,90 @@ fn loop_sums_1_to_10() {
          fea26469706673582212209d7fdc4e378e8bd064d9958c5d4e6b4658225c10f3d01a43ff9561cb406742ce64736f6c63430008220033",
     );
     let bytecode = strip_metadata(&full);
-    let result = run_bytecode(bytecode, ENOUGH_GAS);
+    let result = run_bytecode(bytecode, ENOUGH_GAS).unwrap();
 
-    match result {
-        Ok(res) => {
-            assert!(!res.reverted);
-            assert_eq!(res.output[31], 55, "sum(1..10) should be 55");
-        }
-        Err(e) => {
-            // If this fails, it tells us which opcode we're missing.
-            // SLT (0x12) is used by the compiled loop — our stub returns 0.
-            panic!(
-                "Loop contract failed: {e}. \
-                 This likely means SLT (signed less-than) is not yet implemented — \
-                 the Solidity compiler uses SLT for loop bounds."
-            );
-        }
-    }
+    assert!(!result.reverted);
+    assert_eq!(result.output[31], 55, "sum(1..10) should be 55");
 }
 
 // ---------------------------------------------------------------------------
-// Limitations: what our toyevm can't handle yet
+// Add — function dispatch + ABI encoding + checked arithmetic (Day 3)
 // ---------------------------------------------------------------------------
 
-/// The Add contract uses function selectors (CALLDATALOAD + SHR + EQ),
-/// ABI decoding with SLT for bounds checking, and checked arithmetic.
-/// This test documents which opcodes block us.
+/// ```solidity
+/// contract Add {
+///     function add(uint256 a, uint256 b) public pure returns (uint256) {
+///         return a + b;
+///     }
+/// }
+/// ```
 #[test]
-fn add_contract_needs_slt() {
+fn add_3_plus_5() {
     let full = hex_to_bytes(
         "6080604052348015600e575f5ffd5b50600436106026575f3560e01c8063771602f714602a575b\
          5f5ffd5b60396035366004605d565b604b565b60405190815260200160405180910390f35b5f60\
          548284607c565b90505b92915050565b5f5f60408385031215606d575f5ffd5b50508035926020\
          909101359150565b80820180821115605757634e487b7160e01b5f52601160045260245ffd\
-         fea2646970667358221220\
-         4c3579bcd46e87a316c528e1142669fc8c448f3d7c7946fa819f6bbf2674619864736f6c63430008220033",
+         fea26469706673582212200d1e380696ac698f952584323ee63f5c8bb703e124fcebf0be4353a9c561198864736f6c63430008220033",
     );
     let bytecode = strip_metadata(&full);
 
-    // Build calldata for add(3, 5): selector + abi-encoded args
-    // selector: keccak256("add(uint256,uint256)") = 0x771602f7
+    // Build calldata: selector(0x771602f7) + a(3) + b(5)
     let mut calldata = vec![0x77, 0x16, 0x02, 0xf7];
-    calldata.extend_from_slice(&U256::from(3u64).to_bytes()); // a = 3
-    calldata.extend_from_slice(&U256::from(5u64).to_bytes()); // b = 5
+    calldata.extend_from_slice(&U256::from(3u64).to_bytes());
+    calldata.extend_from_slice(&U256::from(5u64).to_bytes());
 
     let ctx = ContextBuilder::new().calldata(calldata).build();
     let mut interp = Interpreter::with_context(bytecode.to_vec(), ENOUGH_GAS, ctx, Storage::new());
-    let result = interp.run();
+    let result = interp.run().unwrap();
 
-    match result {
-        Ok(res) if !res.reverted => {
-            // If this succeeds, SLT was implemented!
-            assert_eq!(res.output.len(), 32);
-            assert_eq!(res.output[31], 8, "3 + 5 = 8");
-        }
-        Ok(res) if res.reverted => {
-            // Expected: SLT returns 0 (stub), causing ABI decoding to
-            // think calldata is too short, and the contract reverts.
-            // This is the "limitation" — we need proper SLT to run real contracts.
-        }
-        Ok(_) => unreachable!(),
-        Err(e) => {
-            // Also acceptable — missing opcode.
-            eprintln!("Add contract error (expected): {e}");
-        }
-    }
+    assert!(!result.reverted, "add(3,5) should not revert");
+    assert_eq!(result.output.len(), 32);
+    assert_eq!(result.output[31], 8, "3 + 5 = 8");
+}
+
+#[test]
+fn add_reverts_on_wrong_selector() {
+    let full = hex_to_bytes(
+        "6080604052348015600e575f5ffd5b50600436106026575f3560e01c8063771602f714602a575b\
+         5f5ffd5b60396035366004605d565b604b565b60405190815260200160405180910390f35b5f60\
+         548284607c565b90505b92915050565b5f5f60408385031215606d575f5ffd5b50508035926020\
+         909101359150565b80820180821115605757634e487b7160e01b5f52601160045260245ffd\
+         fea26469706673582212200d1e380696ac698f952584323ee63f5c8bb703e124fcebf0be4353a9c561198864736f6c63430008220033",
+    );
+    let bytecode = strip_metadata(&full);
+
+    // Wrong selector — should fall through to the default revert
+    let mut calldata = vec![0xDE, 0xAD, 0xBE, 0xEF];
+    calldata.resize(68, 0x00);
+
+    let ctx = ContextBuilder::new().calldata(calldata).build();
+    let mut interp = Interpreter::with_context(bytecode.to_vec(), ENOUGH_GAS, ctx, Storage::new());
+    let result = interp.run().unwrap();
+
+    assert!(result.reverted, "wrong selector should revert");
+}
+
+#[test]
+fn add_reverts_on_short_calldata() {
+    let full = hex_to_bytes(
+        "6080604052348015600e575f5ffd5b50600436106026575f3560e01c8063771602f714602a575b\
+         5f5ffd5b60396035366004605d565b604b565b60405190815260200160405180910390f35b5f60\
+         548284607c565b90505b92915050565b5f5f60408385031215606d575f5ffd5b50508035926020\
+         909101359150565b80820180821115605757634e487b7160e01b5f52601160045260245ffd\
+         fea26469706673582212200d1e380696ac698f952584323ee63f5c8bb703e124fcebf0be4353a9c561198864736f6c63430008220033",
+    );
+    let bytecode = strip_metadata(&full);
+
+    // Correct selector but only 4 bytes (no arguments) — SLT check should catch this
+    let calldata = vec![0x77, 0x16, 0x02, 0xf7];
+
+    let ctx = ContextBuilder::new().calldata(calldata).build();
+    let mut interp = Interpreter::with_context(bytecode.to_vec(), ENOUGH_GAS, ctx, Storage::new());
+    let result = interp.run().unwrap();
+
+    assert!(
+        result.reverted,
+        "short calldata should revert (SLT bounds check)"
+    );
 }
