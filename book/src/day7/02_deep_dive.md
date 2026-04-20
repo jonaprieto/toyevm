@@ -66,6 +66,23 @@ These are the techniques `revm` uses. Combined, they bring the interpreter withi
 
 ---
 
+**Q: Why is JIT compilation not the right approach for EVM execution?**
+
+```admonish note title="Answer" collapsible=true
+The EVM workload is a poor fit for JIT compilation for several reinforcing reasons:
+
+- **Compilation latency** is never amortized — most contracts are called rarely (median: fewer than 10 transactions over their lifetime). LLVM at `-O0` already takes milliseconds per contract, too slow for a node processing thousands of transactions per block.
+- **Instruction cache pressure** — JIT-compiled native code is larger than bytecode. Thousands of compiled contracts fill the I-cache, and cache misses on x86 cost 100+ cycles, wiping out the speedup.
+- **Branch prediction** favors the interpreter — a single hot dispatch loop is predictable; scattered generated code is not.
+- **Determinism** — ensuring bit-identical gas accounting across x86/ARM, OS versions, and compiler versions is extremely difficult. Any divergence is a consensus failure.
+
+The alternative that emerged is the **tail-call interpreter**: each opcode handler ends with a direct jump to the next handler, eliminating the dispatch loop. This gives near-native speed without compilation overhead: no dispatch branches, better branch prediction, no call stack growth, and full determinism. Rust does not yet have `#[musttail]` (there is an [accepted RFC](https://github.com/rust-lang/rfcs/pull/3407)), but a `match` with `#[repr(u8)]` compiles to a jump table that approaches the same performance. C++ EVMs like `evmone` use `__attribute__((musttail))` directly.
+
+AOT compilation still has a niche for hot contracts (e.g., via `evm_mlir`), but the baseline for production EVMs is a fast interpreter — not a compiler.
+```
+
+---
+
 **Q: Why is determinism a constraint on EVM optimization?**
 
 ```admonish note title="Answer" collapsible=true

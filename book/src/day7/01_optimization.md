@@ -196,6 +196,52 @@ Blockchain requires **deterministic execution** — every node must produce the 
 
 [evm_mlir](https://blog.lambdaclass.com/evm-performance-boosts-with-mlir/) takes the AOT approach for this reason.
 
+## Why not JIT?
+
+A question I kept coming back to: if native code is faster, why don't production EVMs just JIT-compile everything?
+
+It turns out the EVM workload is a poor fit for JIT compilation. Several factors work against it:
+
+1. **Compilation latency.** Even at `-O0`, LLVM takes milliseconds per contract. A blockchain node processes thousands of transactions per block — if each contract is compiled on first call, the compilation overhead dominates. A contract called once never amortizes the cost.
+
+2. **Code size and cache pressure.** JIT-compiled native code is larger than the bytecode it replaces. Thousands of compiled contracts fill the instruction cache. Cache misses on x86 cost 100+ cycles each — enough to wipe out the gains from native execution.
+
+3. **Branch prediction.** A well-tuned interpreter has a single hot dispatch loop that the CPU's branch predictor learns quickly. JIT-compiled code scatters control flow across generated functions the predictor has never seen. The interpreter's predictable pattern can outperform "faster" native code that the CPU mispredicts.
+
+4. **Cold contracts.** JIT compilation only pays off for contracts called many times. Most contracts on Ethereum are called rarely — the median contract receives fewer than 10 transactions over its lifetime. For these, JIT warm-up is pure overhead.
+
+5. **Determinism.** Ensuring bit-identical gas accounting across different hardware (x86 vs. ARM), OS versions, and compiler versions is extremely difficult. Any divergence causes consensus failures.
+
+### Tail-call interpreters
+
+The approach the community converged on is the **tail-call interpreter** — sometimes called a "threaded interpreter" or "must-tail dispatch." Instead of a central `match` loop, each opcode handler ends with a tail call directly to the next handler:
+
+```rust
+// Conceptual — each handler is a separate function
+fn op_add(ctx: &mut Context) -> ! {
+    let a = ctx.stack.pop();
+    let b = ctx.stack.pop();
+    ctx.stack.push(a + b);
+    ctx.pc += 1;
+    // Tail call to the next opcode's handler
+    let next = DISPATCH_TABLE[ctx.bytecode[ctx.pc]];
+    musttail next(ctx)
+}
+```
+
+This eliminates the dispatch loop entirely. Each handler jumps directly to the next one:
+
+- **No dispatch overhead** — zero branches between opcodes
+- **Better branch prediction** — the CPU sees ADD → next opcode, not ADD → match → next opcode
+- **No call stack growth** — tail calls reuse the same stack frame
+- **Deterministic** — same bytecode always produces the same execution trace
+
+```admonish note title="Rust and must-tail calls"
+Rust does not yet have a `#[musttail]` attribute (there is an [accepted RFC](https://github.com/rust-lang/rfcs/pull/3407)). In the meantime, `revm` uses a `match` loop that LLVM optimizes into a jump table — close to tail-call dispatch in practice. C compilers support `__attribute__((musttail))` today, and projects like `evmone` (C++ EVM) use it directly.
+```
+
+The lesson I took from this: **for the EVM's workload — short, diverse, rarely-repeated contracts — a very fast interpreter beats a compiler.** AOT compilation has a niche for hot contracts, but the baseline must be a low-overhead interpreter.
+
 ## References
 
 - [revm source code](https://github.com/bluealloy/revm) — production Rust EVM with the optimization techniques described above
