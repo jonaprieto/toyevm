@@ -284,11 +284,35 @@ impl Interpreter {
                     self.pc += 1;
                 }
 
-                Opcode::SLT | Opcode::SGT => {
-                    let _a = self.stack.pop()?;
-                    let _b = self.stack.pop()?;
-                    // TODO: proper signed comparison
-                    self.stack.push(U256::ZERO)?;
+                Opcode::SLT => {
+                    let a = self.stack.pop()?;
+                    let b = self.stack.pop()?;
+                    // Two's complement signed comparison:
+                    // high bit (byte 0, bit 7) is the sign bit.
+                    let a_neg = a.to_bytes()[0] & 0x80 != 0;
+                    let b_neg = b.to_bytes()[0] & 0x80 != 0;
+                    let result = match (a_neg, b_neg) {
+                        (true, false) => true,  // negative < positive
+                        (false, true) => false, // positive >= negative
+                        _ => a < b,             // same sign: unsigned order works
+                    };
+                    self.stack
+                        .push(if result { U256::ONE } else { U256::ZERO })?;
+                    self.pc += 1;
+                }
+
+                Opcode::SGT => {
+                    let a = self.stack.pop()?;
+                    let b = self.stack.pop()?;
+                    let a_neg = a.to_bytes()[0] & 0x80 != 0;
+                    let b_neg = b.to_bytes()[0] & 0x80 != 0;
+                    let result = match (a_neg, b_neg) {
+                        (true, false) => false, // negative is not > positive
+                        (false, true) => true,  // positive > negative
+                        _ => a > b,             // same sign: unsigned order works
+                    };
+                    self.stack
+                        .push(if result { U256::ONE } else { U256::ZERO })?;
                     self.pc += 1;
                 }
 
