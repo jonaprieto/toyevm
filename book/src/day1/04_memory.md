@@ -30,7 +30,7 @@ A common mistake is assuming `MLOAD`/`MSTORE` require 32-byte-aligned offsets. T
 
 After `MSTORE(0x00, 42)` and `MSTORE(0x20, 7)`, memory looks like:
 
-![EVM memory layout](https://kroki.io/bytefield/svg/eNqNkEFLw0AQhe_-isf0koCBJRaRgAcPHqVgvYmHTXamCWy6YXdjE4r_3a1BbKEHT-_yvm8ekxkW1G4qDp2JLdYqv8mM14eicXbs90XL2rAPOFZW12wD3klNShFSlEusl7hX9PH1SycjSDwzeu4xRI9HqOkhNY9VGPQeJSrprAWtjDJKhC7R0Hgdmxap2_AVSIQT9gft9ADaOtuZLs6nm87PsHp2Y6QL8cv2bfP6DCcSOF5dI3IuPoc-tR0Z2V2Jeo4c8n_gP7ueJLLHIslO_7pdVDnl33HxdYE=)
+![EVM memory layout](https://kroki.io/bytefield/svg/eNp1jsEKgkAQhu89xbBdXFBYF8nw1iHoEkXWA2ztjgmuympkRO-eW2Emdhv-mW_-z5FGXL1TkV107p2VkMpUdOK80mPRAGHNnIGDRinQShfmBmVtKIF7VJUiB38GEaZZBmQqmWSI5DHAGYNSSJnmSQ_qjhJRAllgrUwE20O88sEWut0ctPM63m92S_LzN-BWqtCfJYgabNUfMUTJBmLhCM_HeUTF-nzf-Y07ttuFgFP3m_A2CSmhT7czZy4=)
 
 Each row is 32 bytes (one word). `MSTORE` writes a U256 value starting at the given byte offset.
 
