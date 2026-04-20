@@ -23,7 +23,7 @@ Cold SLOAD costs 2100 gas, warm costs 100 gas. This was introduced in [EIP-2929]
 **Q: What is the difference between CALLER and ORIGIN?**
 
 ```admonish note title="Answer" collapsible=true
-`CALLER` (I_s) is the address that directly invoked the current execution context — it changes with each nested CALL. `ORIGIN` (I_o) is the externally-owned account (EOA) that initiated the transaction — it never changes regardless of call depth. Using `ORIGIN` for authorization is a security anti-pattern because a malicious contract could trick a user into signing a transaction that calls through it, making `ORIGIN` appear as the user's address.
+`CALLER` ($I_s$) is the address that directly invoked the current execution context — it changes with each nested CALL. `ORIGIN` ($I_o$) is the externally-owned account (EOA) that initiated the transaction — it never changes regardless of call depth. Using `ORIGIN` for authorization is a security anti-pattern because a malicious contract could trick a user into signing a transaction that calls through it, making `ORIGIN` appear as the user's address.
 ```
 
 ---

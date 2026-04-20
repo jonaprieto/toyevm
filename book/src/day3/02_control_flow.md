@@ -100,12 +100,12 @@ At this point our interpreter has access to the full execution context (I in the
 
 | Opcode | Returns | Yellow Paper |
 |--------|---------|-------------|
-| `CALLER` | Address of the immediate caller | I_s |
-| `ORIGIN` | Address of the original EOA sender | I_o |
-| `CALLVALUE` | Wei sent with this call | I_v |
-| `CALLDATALOAD` | 32 bytes of calldata at offset | I_d |
-| `CALLDATASIZE` | Length of calldata | \|I_d\| |
-| `ADDRESS` | Address of the executing contract | I_a |
+| `CALLER` | Address of the immediate caller | $I_s$ |
+| `ORIGIN` | Address of the original EOA sender | $I_o$ |
+| `CALLVALUE` | Wei sent with this call | $I_v$ |
+| `CALLDATALOAD` | 32 bytes of calldata at offset | $I_d$ |
+| `CALLDATASIZE` | Length of calldata | $|I_d|$ |
+| `ADDRESS` | Address of the executing contract | $I_a$ |
 
 The distinction between `CALLER` and `ORIGIN` tripped me up at first. `CALLER` changes with each nested call, but `ORIGIN` always points to the EOA that initiated the transaction — a subtle but important difference for security.
 

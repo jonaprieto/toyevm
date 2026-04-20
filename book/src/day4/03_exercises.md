@@ -111,7 +111,7 @@ You only need to implement `code` — the rest follows.
 ## Exercise 4.5 — LOG0 gas cost matches the formula
 
 **What to do.** Write a pure arithmetic test that verifies
-`375 + 8 * data_len == expected` for two inputs: 0 bytes (cost = 375) and 32 bytes
+$G_{log} + G_{logdata} \times \text{data\_len} = \text{expected}$ for two inputs: 0 bytes (cost = 375) and 32 bytes
 (cost = 631). Do not execute any bytecode — test the formula directly.
 
 **How to verify.**
@@ -120,8 +120,8 @@ You only need to implement `code` — the rest follows.
 cargo test ex_4_5
 ```
 
-**Hint.** Yellow Paper Section 9.2 defines `G_log = 375`, `G_logdata = 8`,
-`G_logtopic = 375`. For LOG0 there are no topics, so the topic term is zero.
+**Hint.** Yellow Paper Section 9.2 defines $G_{log} = 375$, $G_{logdata} = 8$,
+$G_{logtopic} = 375$. For LOG0 there are no topics, so the topic term is zero.
 
 > **Rust pattern — formula verification in tests.** Small arithmetic unit tests pin
 > protocol constants early and catch regressions if a constant is refactored.

@@ -46,12 +46,12 @@ The Ethereum Yellow Paper uses Greek letters for the machine state:
 
 | Symbol | Meaning | Our Rust type |
 |--------|---------|---------------|
-| σ (sigma) | World state (all accounts) | — (Day 3+) |
-| μ | Machine state | — (the interpreter struct) |
-| μ_s | Stack | `Stack` |
-| μ_m | Memory | `Memory` |
-| μ_g | Gas remaining | `u64` (Day 2) |
-| μ_pc | Program counter | `usize` (Day 2) |
+| $\sigma$ (sigma) | World state (all accounts) | — (Day 3+) |
+| $\mu$ | Machine state | — (the interpreter struct) |
+| $\mu_s$ | Stack | `Stack` |
+| $\mu_m$ | Memory | `Memory` |
+| $\mu_g$ | Gas remaining | `u64` (Day 2) |
+| $\mu_{pc}$ | Program counter | `usize` (Day 2) |
 
 The execution model is a pure function:
 

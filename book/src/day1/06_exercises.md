@@ -307,15 +307,15 @@ is that bytes you never wrote are zero — the EVM guarantees this.
 
 | Yellow Paper symbol | Our type / field | Notes |
 |---|---|---|
-| σ (world state) | Not yet modelled | Introduced in Day 3 |
-| μ (machine state) | Fields of `ExecutionContext` | Combined in the interpreter |
-| μ_s (stack) | `Stack` | Exercises 1.5 and 1.6 |
-| μ_m (memory) | `Memory` | Exercises 1.7 and 1.8 |
-| μ_g (gas) | `u64` field | Introduced in Day 2 |
-| μ_pc (program counter) | `usize` field | Introduced in Day 2 |
-| Values on μ_s | `U256` | Exercises 1.1 – 1.4 |
+| $\sigma$ (world state) | Not yet modelled | Introduced in Day 3 |
+| $\mu$ (machine state) | Fields of `ExecutionContext` | Combined in the interpreter |
+| $\mu_s$ (stack) | `Stack` | Exercises 1.5 and 1.6 |
+| $\mu_m$ (memory) | `Memory` | Exercises 1.7 and 1.8 |
+| $\mu_g$ (gas) | `u64` field | Introduced in Day 2 |
+| $\mu_{pc}$ (program counter) | `usize` field | Introduced in Day 2 |
+| Values on $\mu_s$ | `U256` | Exercises 1.1 – 1.4 |
 
 All values in the range \[0, 2²⁵⁶) correspond to `U256`. When the Yellow Paper
-writes "let x ≡ μ_s[0]" it means "pop the top of the stack into x". When it
-writes "μ_m[i]" it means "byte i in memory". These direct mappings are why we
+writes "let x ≡ $\mu_s[0]$" it means "pop the top of the stack into x". When it
+writes "$\mu_m[i]$" it means "byte i in memory". These direct mappings are why we
 model the types so literally — the code reads like the spec.

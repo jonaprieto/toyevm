@@ -360,14 +360,14 @@ After completing Day 2, your interpreter can execute the `Return42` Solidity con
 
 | Yellow Paper symbol | Meaning | Our representation |
 |---|---|---|
-| μ_g | Gas remaining | `u64` field in the execution context |
-| μ_pc | Program counter | `usize` field, incremented by the fetch step |
-| δ | Stack items consumed by opcode | Encoded in opcode documentation |
-| α | Stack items produced by opcode | Encoded in opcode documentation |
-| w | Current opcode word | `Opcode` enum variant |
+| $\mu_g$ | Gas remaining | `u64` field in the execution context |
+| $\mu_{pc}$ | Program counter | `usize` field, incremented by the fetch step |
+| $\delta$ | Stack items consumed by opcode | Encoded in opcode documentation |
+| $\alpha$ | Stack items produced by opcode | Encoded in opcode documentation |
+| $w$ | Current opcode word | `Opcode` enum variant |
 
 **Section 9.4** of the Yellow Paper defines the state transition for each opcode
-as a tuple `(μ′_g, μ′_pc, μ′_s, μ′_m)` — the new gas, program counter, stack,
+as a tuple $(\mu'_g, \mu'_{pc}, \mu'_s, \mu'_m)$ — the new gas, program counter, stack,
 and memory after execution. Our interpreter loop computes exactly this tuple on
 each iteration. When you read an opcode's formal specification, map each primed
 symbol (′) to the field you update in the Rust implementation.

@@ -91,7 +91,7 @@ cargo test ex_5_4
 ```
 
 **Hint.** Integer division truncates in Rust: `gas_remaining / 64` rounds down, so
-`gas_remaining - gas_remaining / 64` is always at least `gas_remaining * 63 / 64`.
+$G_{remaining} - \lfloor G_{remaining} / 64 \rfloor$ is always at least $\lfloor G_{remaining} \times 63 / 64 \rfloor$.
 The `min` call picks whichever is smaller: the cap or the request.
 
 > **Rust pattern — min/max arithmetic.** `a.min(b)` is idiomatic Rust for
@@ -105,7 +105,7 @@ The `min` call picks whichever is smaller: the cap or the request.
 | Symbol | Meaning | Section |
 |--------|---------|---------|
 | **Θ** | Message call function | §8 |
-| `μ_s[0]` | Gas stipend on the stack | §8.1 |
+| $\mu_s[0]$ | Gas stipend on the stack | §8.1 |
 | EIP-150 | 63/64 gas forwarding rule | §8 |
 | `n` | Call depth counter | §8 |
 | `MAX_CALL_DEPTH` | Protocol constant (1024) | §8 |

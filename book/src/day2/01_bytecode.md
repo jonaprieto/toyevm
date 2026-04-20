@@ -8,7 +8,7 @@ EVM bytecode is a flat array of bytes. Each byte is either:
 - An **opcode** (a single-byte instruction), or
 - An **immediate** byte following a PUSH instruction
 
-The program counter (μ_pc in the Yellow Paper) starts at 0 and advances linearly. When the interpreter encounters `PUSH3`, it needs to read the opcode byte, then consume the next 3 bytes as the immediate value, advancing the PC by 4 total (1 + 3).
+The program counter ($\mu_{pc}$ in the Yellow Paper) starts at 0 and advances linearly. When the interpreter encounters `PUSH3`, it needs to read the opcode byte, then consume the next 3 bytes as the immediate value, advancing the PC by 4 total (1 + 3).
 
 Example bytecode: `60 03 60 05 01 00`
 

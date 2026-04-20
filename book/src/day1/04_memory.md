@@ -64,13 +64,11 @@ Each row is 32 bytes (one word). `MSTORE` writes a U256 value starting at the gi
 
 ## Yellow Paper Map
 
-In the Yellow Paper, memory is μ_m. The memory size function is:
+In the Yellow Paper, memory is $\mu_m$. The memory size function is:
 
-```
-M(μ_i, s, f) = max(μ_i, ⌈(f + s) / 32⌉)
-```
+$$M(\mu_i, s, f) = \max(\mu_i, \lceil (f + s) / 32 \rceil)$$
 
-Where `f` is the byte offset, `s` is the size in bytes, and `μ_i` is the current word count. Our `expansion_size` method implements this.
+Where `f` is the byte offset, `s` is the size in bytes, and $\mu_i$ is the current word count. Our `expansion_size` method implements this.
 
 ## Exercises
 

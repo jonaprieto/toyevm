@@ -23,7 +23,7 @@ If a contract pushes the 1025th element, the EVM triggers an **exceptional halt*
 **Q: Is EVM memory persistent between transactions?**
 
 ```admonish note title="Answer" collapsible=true
-No. Memory (μ_m) is ephemeral — it is allocated fresh for each execution context and destroyed when execution completes. **Storage** (σ[a]_s) is the persistent key-value map that survives between transactions. Confusing the two is a common mistake in technical discussions.
+No. Memory ($\mu_m$) is ephemeral — it is allocated fresh for each execution context and destroyed when execution completes. **Storage** ($\sigma[a]_s$) is the persistent key-value map that survives between transactions. Confusing the two is a common mistake in technical discussions.
 ```
 
 ---
@@ -31,7 +31,7 @@ No. Memory (μ_m) is ephemeral — it is allocated fresh for each execution cont
 **Q: What does it mean for EVM execution to be deterministic?**
 
 ```admonish note title="Answer" collapsible=true
-Given the same world state σ and the same transaction T, every EVM implementation must produce the exact same output state σ', return data, gas usage, and logs. There is no randomness, no access to wall-clock time (TIMESTAMP comes from the block header, which is agreed upon by consensus), and no system calls. This determinism is what enables thousands of independent nodes to reach consensus on the state of a single chain.
+Given the same world state $\sigma$ and the same transaction T, every EVM implementation must produce the exact same output state $\sigma'$, return data, gas usage, and logs. There is no randomness, no access to wall-clock time (TIMESTAMP comes from the block header, which is agreed upon by consensus), and no system calls. This determinism is what enables thousands of independent nodes to reach consensus on the state of a single chain.
 ```
 
 ---

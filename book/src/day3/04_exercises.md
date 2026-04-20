@@ -78,7 +78,7 @@ different offsets, and compare the gas consumed:
 
 Assert that the second execution consumes more gas than the first, and that the
 difference matches the memory expansion formula:
-`memory_cost = 3 * words + words² / 512`.
+$C_{mem} = 3 \cdot \text{words} + \lfloor \text{words}^2 / 512 \rfloor$.
 
 **File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
 
@@ -89,8 +89,8 @@ cargo test ex_3_2
 ```
 
 **Hint.** Compute the expected cost by hand:
-- 1 word: `3*1 + 1/512 = 3` gas.
-- 33 words: `3*33 + 33*33/512 = 99 + 2 = 101` gas.
+- 1 word: $3 \times 1 + \lfloor 1/512 \rfloor = 3$ gas.
+- 33 words: $3 \times 33 + \lfloor 33^2/512 \rfloor = 99 + 2 = 101$ gas.
 The memory expansion cost for a single `MSTORE` is `new_cost - old_cost`
 (where `old_cost` is 0 for an empty memory). Add the base cost of `MSTORE`
 (3 gas) and the `PUSH1`/`PUSH32` costs to get the total.
@@ -136,7 +136,7 @@ then the *value* (second item), so push the value before the key.
 > **Rust pattern — `HashMap` as a storage model.**
 > `Storage` wraps a `HashMap<U256, U256>`. This is a faithful model of the EVM
 > specification, which defines account storage as a mapping from 256-bit keys to
-> 256-bit values (σ[a]_s in Yellow Paper notation). `HashMap` gives O(1)
+> 256-bit values ($\sigma[a]_s$ in Yellow Paper notation). `HashMap` gives O(1)
 > average-case reads and writes, just like a trie lookup in a real client.
 > The difference is that our `HashMap` lives only for the duration of a test;
 > a production EVM persists it to a Merkle Patricia Trie on disk.
@@ -438,28 +438,26 @@ After completing Day 3, your interpreter can execute four real Solidity contract
 
 | Yellow Paper symbol | Meaning | Our representation |
 |---|---|---|
-| I | Execution environment (a tuple) | Execution context struct |
-| I_a | Address of the account being executed | `address: Address` field |
-| I_s | Sender (caller) address | `caller: Address` field |
-| I_o | Origin of the transaction | `origin: Address` field |
-| I_d | Input data (calldata) | `calldata: Vec<u8>` field |
-| I_v | Value transferred with the call | `value: U256` field |
-| I_b | Bytecode being executed | `bytecode: Vec<u8>` field |
-| I_H | Current block header | `block: BlockContext` struct |
-| I_e | Call depth | `depth: u32` field |
+| $I$ | Execution environment (a tuple) | Execution context struct |
+| $I_a$ | Address of the account being executed | `address: Address` field |
+| $I_s$ | Sender (caller) address | `caller: Address` field |
+| $I_o$ | Origin of the transaction | `origin: Address` field |
+| $I_d$ | Input data (calldata) | `calldata: Vec<u8>` field |
+| $I_v$ | Value transferred with the call | `value: U256` field |
+| $I_b$ | Bytecode being executed | `bytecode: Vec<u8>` field |
+| $I_H$ | Current block header | `block: BlockContext` struct |
+| $I_e$ | Call depth | `depth: u32` field |
 
-**Section 4.1** of the Yellow Paper defines the execution environment I as a
+**Section 4.1** of the Yellow Paper defines the execution environment $I$ as a
 nine-tuple. Each element has a direct counterpart in our context struct. Day 3
-fills in `I_d` (calldata) and connects `σ[I_a]_s` (account storage) to our
-`Storage` type. Future days will add `I_v` (value) and `I_H` (block information)
+fills in $I_d$ (calldata) and connects $\sigma[I_a]_s$ (account storage) to our
+`Storage` type. Future days will add $I_v$ (value) and $I_H$ (block information)
 for the full `CALL` and environment opcodes.
 
 The formula for memory expansion gas referenced in Exercise 3.2 is:
 
-```
-C_mem(a) = G_memory × a + ⌊a² / 512⌋
-```
+$$C_{mem}(a) = G_{memory} \cdot a + \left\lfloor \frac{a^2}{512} \right\rfloor$$
 
-where `a` is the number of 32-byte memory words active and `G_memory = 3`.
+where $a$ is the number of 32-byte memory words active and $G_{memory} = 3$.
 This quadratic term makes very large memory expansions prohibitively expensive,
 bounding the memory a contract can consume within a single transaction.

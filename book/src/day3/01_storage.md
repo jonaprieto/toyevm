@@ -1,6 +1,6 @@
 # Storage and EIP-2929
 
-Storage is the EVM's persistent memory. Unlike memory (μ_m), which is wiped after each call, storage (σ[a]_s) persists between transactions. I found it helpful to think of it as a contract's own key-value database — a mapping from 256-bit keys to 256-bit values, scoped per contract address.
+Storage is the EVM's persistent memory. Unlike memory ($\mu_m$), which is wiped after each call, storage ($\sigma[a]_s$) persists between transactions. I found it helpful to think of it as a contract's own key-value database — a mapping from 256-bit keys to 256-bit values, scoped per contract address.
 
 ## SLOAD and SSTORE
 
