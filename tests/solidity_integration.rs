@@ -8,7 +8,7 @@
 //!   forge inspect <Contract> deployedBytecode
 
 use toyevm::context::ContextBuilder;
-use toyevm::interpreter::{run_bytecode, Interpreter};
+use toyevm::interpreter::{Interpreter, run_bytecode};
 use toyevm::storage::Storage;
 use toyevm::types::U256;
 
