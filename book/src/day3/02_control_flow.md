@@ -84,7 +84,11 @@ Here's how a Solidity `while (i < 5) { i++; }` compiles to bytecode — I traced
  6: LT             ; i < 5?
  7: PUSH1 18       ; loop_body address
  9: JUMPI          ; jump if true
-10: PUSH1 0, MSTORE, PUSH1 32, PUSH1 0, RETURN  ; exit: return i
+10: PUSH1 0        ; offset for MSTORE
+12: MSTORE         ; mem[0] = i
+13: PUSH1 32       ; return length
+15: PUSH1 0        ; return offset
+17: RETURN         ; exit: return i
 18: JUMPDEST       ; loop_body
 19: PUSH1 1        ; push 1
 21: ADD            ; i++
@@ -96,7 +100,7 @@ This is Exercise 3.10 — the "wow moment" where a loop actually runs in our int
 
 ## Context opcodes
 
-At this point our interpreter has access to the full execution context (I in the Yellow Paper):
+At this point our interpreter has access to the full execution context ($I$ in the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf)):
 
 | Opcode | Returns | Yellow Paper |
 |--------|---------|-------------|

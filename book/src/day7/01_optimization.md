@@ -1,6 +1,6 @@
 # Optimization Passes
 
-On Day 7 I closed the loop: we take the CFG from Day 6 and transform it. Two classic optimization passes — constant folding and dead code elimination — demonstrate the fundamental techniques that production compilers like `evm_mlir` use at scale. I also explored how to make the interpreter itself faster — the techniques that separate a naive EVM from a production one.
+In Module 7 I closed the loop: we take the CFG from Module 6 and transform it. Two classic optimization passes — constant folding and dead code elimination — demonstrate the fundamental techniques that production compilers like `evm_mlir` use at scale. I also explored how to make the interpreter itself faster — the techniques that separate a naive EVM from a production one.
 
 ## The OptimizationPass trait
 
@@ -51,7 +51,7 @@ When folding `PUSH 5, PUSH 0, DIV`, the result must match the EVM specification:
 
 ## Dead Code Elimination
 
-DCE removes blocks that are unreachable from the entry or cannot reach any exit. This uses the liveness analysis from Day 6.
+DCE removes blocks that are unreachable from the entry or cannot reach any exit. This uses the liveness analysis from Module 6.
 
 A block is **dead** if:
 - It's unreachable from the entry block (forward), OR
@@ -158,6 +158,88 @@ Common EVM superinstruction candidates (from profiling real contract bytecode):
 | `ISZERO, PUSH, JUMPI` | High (conditional branch) | 2 dispatches |
 
 Production interpreters like CPython and LuaJIT use superinstructions extensively. In the EVM context, `revm`'s analysis phase effectively does this by pre-computing gas costs and skipping redundant checks.
+
+## Speculative pre-execution over the CFG
+
+With the CFG from Module 6 in hand, we can go beyond static analysis: **speculatively execute** both arms of a conditional branch before the condition is resolved. The idea is borrowed from CPU branch prediction — but applied at the bytecode level.
+
+### The problem
+
+At a `JUMPI`, the interpreter must evaluate the condition to decide which block to enter. Until the condition is known, the pipeline stalls. In a tight loop with expensive setup (e.g., loading storage values), this stall happens on every iteration.
+
+### The idea
+
+Given a `JUMPI` with two outgoing CFG edges (true → block $B_t$, false → block $B_f$), we can:
+
+1. **Fork the machine state** — snapshot the stack, memory, and gas counter
+2. **Execute both successors** on their own snapshot
+3. **When the condition resolves**, discard the wrong path and adopt the correct one
+
+If the speculated path has no side effects (no `SSTORE`, `LOG`, `CALL`, etc.), we gain a head start on whichever branch is taken.
+
+### When it helps
+
+Speculative pre-execution is profitable when:
+- The condition depends on a value that is **expensive to compute** (e.g., an SLOAD or a deep arithmetic chain)
+- Both successor blocks are **short and side-effect-free** (pure stack/memory computation)
+- The CFG shows a **diamond pattern** (both branches reconverge quickly)
+
+```mermaid
+graph TD
+    A["Block A<br/>..., JUMPI"] --> B_t["Block Bt (true)<br/>pure computation"]
+    A --> B_f["Block Bf (false)<br/>pure computation"]
+    B_t --> C["Block C (merge)"]
+    B_f --> C
+    style B_t stroke:#2e7d32,stroke-width:2px,stroke-dasharray: 5 5
+    style B_f stroke:#2e7d32,stroke-width:2px,stroke-dasharray: 5 5
+```
+
+In this diamond, blocks $B_t$ and $B_f$ are both speculated. Once the condition resolves, we pick the correct result and continue into block C.
+
+### When it does not help
+
+Speculation is wasted (or dangerous) when:
+- A successor block has **side effects** — `SSTORE`, `LOG`, `CALL`, `CREATE`, `SELFDESTRUCT`. These cannot be rolled back.
+- The block is **long or gas-heavy** — speculating a 500-instruction block costs real gas even if the result is discarded.
+- The CFG has **deep divergence** — if the two paths don't reconverge quickly, the speculated state grows unboundedly.
+
+### Safety check using the CFG
+
+The CFG gives us the information we need to decide whether speculation is safe:
+
+```rust
+fn is_safe_to_speculate(cfg: &Cfg, block_id: BlockId) -> bool {
+    let block = &cfg.blocks[&block_id];
+    block.instructions.iter().all(|inst| {
+        !matches!(
+            inst.opcode,
+            Opcode::SSTORE
+                | Opcode::LOG0 | Opcode::LOG1 | Opcode::LOG2
+                | Opcode::LOG3 | Opcode::LOG4
+                | Opcode::CALL | Opcode::DELEGATECALL | Opcode::STATICCALL
+                | Opcode::CREATE | Opcode::CREATE2
+                | Opcode::SELFDESTRUCT
+        )
+    })
+}
+```
+
+This is a conservative check: if every instruction in the block is pure (stack, memory, arithmetic), we can safely speculate it.
+
+### Connection to real systems
+
+| System | Technique | Similarity |
+|--------|-----------|------------|
+| **CPU branch prediction** | Execute both pipeline paths, flush the wrong one | Same idea, hardware level |
+| **JVM HotSpot** | Speculative inlining based on profiling | Speculates on call targets, deoptimizes on miss |
+| **Trace-based JITs** (LuaJIT) | Record a trace for the hot path, fall back on deviation | Speculates the entire loop body |
+| **Database query engines** | Speculative prefetch based on predicate selectivity | Same fork-and-choose pattern |
+
+In the EVM context, speculative pre-execution is most useful in an **AOT compiler** or **analysis tool** — not in a production interpreter (where the overhead of forking state per `JUMPI` would dominate). But as a learning exercise, it ties together everything from Modules 6 and 7: the CFG gives you the graph, liveness tells you which blocks matter, and the side-effect check tells you which blocks are safe.
+
+```admonish tip title="Exercise idea"
+Extend the CFG with a method `speculative_candidates(&self) -> Vec<(BlockId, BlockId)>` that returns all JUMPI blocks where **both** successors are safe to speculate. Run it on the loop bytecode from Module 3 and verify that the loop body qualifies.
+```
 
 ## AOT Compilation (discussion)
 

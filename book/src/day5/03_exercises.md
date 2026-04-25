@@ -1,4 +1,4 @@
-# Exercises — Day 5
+# Exercises — Module 5
 
 ```admonish example title="Exercise Setup" collapsible=true
     git checkout -b my-day-5 my-day-4
@@ -66,7 +66,7 @@ cargo test ex_5_2
 ```
 
 **Hint.** The 1025th call must fail with a call-depth exceeded error, not a stack
-overflow in the host language. The limit is a Yellow Paper protocol constant, not
+overflow in the host language. The limit is a [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf) protocol constant, not
 a Rust implementation detail.
 
 > **Rust pattern — protocol constants.** Naming constants with `pub const` in the
@@ -96,7 +96,7 @@ The `min` call picks whichever is smaller: the cap or the request.
 
 > **Rust pattern — min/max arithmetic.** `a.min(b)` is idiomatic Rust for
 > `if a < b { a } else { b }`. Prefer it over manual branches to keep the forwarding
-> formula on one line and easy to audit against the Yellow Paper.
+> formula on one line and easy to audit against the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf).
 
 ---
 
@@ -110,4 +110,4 @@ The `min` call picks whichever is smaller: the cap or the request.
 | `n` | Call depth counter | §8 |
 | `MAX_CALL_DEPTH` | Protocol constant (1024) | §8 |
 
-Run all Day 5 tests: `cargo test call`
+Run all Module 5 tests: `cargo test call`

@@ -8,7 +8,7 @@ Memory starts empty. Any read or write beyond the current size causes automatic 
 
 1. The new size is rounded up to the next **32-byte boundary** (word-aligned)
 2. New bytes are initialized to **zero**
-3. Expansion has a gas cost (covered in Day 2): $C_{mem}(a) = 3a + \lfloor a^2 / 512 \rfloor$ where $a$ is the word count.
+3. Expansion has a gas cost (covered in Module 2): $C_{mem}(a) = 3a + \lfloor a^2 / 512 \rfloor$ where $a$ is the word count.
 
 The quadratic term makes large memory allocations progressively expensive. This prevents contracts from allocating gigabytes of memory on every node for free.
 
@@ -64,7 +64,7 @@ Each row is 32 bytes (one word). `MSTORE` writes a U256 value starting at the gi
 
 ## Yellow Paper Map
 
-In the Yellow Paper, memory is $\mu_m$. The memory size function is:
+In the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf), memory is $\mu_m$. The memory size function is:
 
 $$M(\mu_i, s, f) = \max(\mu_i, \lceil (f + s) / 32 \rceil)$$
 

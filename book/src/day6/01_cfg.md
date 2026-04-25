@@ -1,6 +1,6 @@
 # From Bytecode to IR: Control Flow Graphs
 
-On Day 6 I shifted from executing bytecode to **analyzing** it. We lift the flat byte stream into a structured intermediate representation (IR) of basic blocks connected by control flow edges.
+In Module 6 I shifted from executing bytecode to **analyzing** it. We lift the flat byte stream into a structured intermediate representation (IR) of basic blocks connected by control flow edges.
 
 ## Why analyze bytecode?
 
@@ -54,7 +54,7 @@ Edges represent possible control flow between blocks:
 | `JUMPI` | 2 edges: true branch (target) + false branch (fall-through) |
 | `STOP` / `RETURN` / `REVERT` / `INVALID` | 0 edges (terminal) |
 
-Here's the CFG for the loop bytecode from Day 3 (`i = 0; while i < 5: i++; return i`):
+Here's the CFG for the loop bytecode from Module 3 (`i = 0; while i < 5: i++; return i`):
 
 ```mermaid
 graph TD
@@ -164,7 +164,7 @@ This is block reachability, not true value-level liveness. True liveness tracks 
 | Tool | What it does | Relation to our code |
 |------|-------------|---------------------|
 | **revm** (analysis pass) | Pre-validates JUMPDEST table, caches gas | Our `find_leaders` + `compute_jumpdests` |
-| **revmc** (JIT/AOT) | Lifts to LLVM IR, compiles to native | Our CFG → Day 7 optimization → (would need LLVM backend) |
+| **revmc** (JIT/AOT) | Lifts to LLVM IR, compiles to native | Our CFG → Module 7 optimization → (would need LLVM backend) |
 | **evm_mlir** | LambdaClass's MLIR-based AOT compiler | Full CFG + dominator tree + SSA |
 | **EOF** | New bytecode format ([EIP-3540](https://eips.ethereum.org/EIPS/eip-3540) family) | Eliminates dynamic jumps entirely — CFG is trivial |
 

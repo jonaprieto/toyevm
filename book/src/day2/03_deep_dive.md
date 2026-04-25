@@ -1,6 +1,6 @@
-# Deep Dive — Day 2
+# Deep Dive — Module 2
 
-Questions I worked through after implementing Day 2. I'd recommend trying to answer each one before expanding.
+Review questions for Module 2. Try answering before expanding.
 
 ---
 

@@ -1,6 +1,6 @@
-# Deep Dive — Day 6
+# Deep Dive — Module 6
 
-Questions I worked through after implementing Day 6.
+Review questions for Module 6. Try answering before expanding.
 
 ---
 

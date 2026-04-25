@@ -1,6 +1,6 @@
-# Deep Dive — Day 7
+# Deep Dive — Module 7
 
-Questions I worked through after implementing Day 7.
+Review questions for Module 7. Try answering before expanding.
 
 ---
 
@@ -9,7 +9,7 @@ Questions I worked through after implementing Day 7.
 ```admonish note title="Answer" collapsible=true
 Scan each basic block for patterns where two PUSH instructions are immediately followed by a binary operation (ADD, MUL, SUB, etc.). Extract the constant values from both PUSHes, evaluate the operation at compile time, and replace all three instructions with a single PUSH of the result. Repeat until no more folds are possible (fixed-point iteration), because one fold may create new folding opportunities (e.g., `PUSH 2, PUSH 3, MUL` folds to `PUSH 6`, which combined with a subsequent `PUSH 4, MUL` folds to `PUSH 24`).
 
-Edge cases to handle: division by zero must return zero (not panic), shifts greater than 255 return zero, and modulo by zero returns zero — all per the Yellow Paper.
+Edge cases to handle: division by zero must return zero (not panic), shifts greater than 255 return zero, and modulo by zero returns zero — all per the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf).
 ```
 
 ---
@@ -79,6 +79,26 @@ The EVM workload is a poor fit for JIT compilation for several reinforcing reaso
 The alternative that emerged is the **tail-call interpreter**: each opcode handler ends with a direct jump to the next handler, eliminating the dispatch loop. This gives near-native speed without compilation overhead: no dispatch branches, better branch prediction, no call stack growth, and full determinism. Rust does not yet have `#[musttail]` (there is an [accepted RFC](https://github.com/rust-lang/rfcs/pull/3407)), but a `match` with `#[repr(u8)]` compiles to a jump table that approaches the same performance. C++ EVMs like `evmone` use `__attribute__((musttail))` directly.
 
 AOT compilation still has a niche for hot contracts (e.g., via `evm_mlir`), but the baseline for production EVMs is a fast interpreter — not a compiler.
+```
+
+---
+
+**Q: How would speculative pre-execution work in practice, and what are its limits?**
+
+```admonish note title="Answer" collapsible=true
+The core mechanism is state forking: at a JUMPI, snapshot the stack and memory, then execute both successor blocks in parallel (or sequentially) on their own copies. When the branch condition resolves, discard the wrong snapshot.
+
+The practical limits are:
+
+1. **State forking cost.** Cloning the stack (1024 × 32 bytes = 32 KB max) and memory (which can be megabytes) on every JUMPI is expensive. A production implementation would use copy-on-write semantics — only clone the pages that are actually modified.
+
+2. **Cascading speculation.** If a speculated block itself ends with JUMPI, you'd need to speculate recursively. This creates an exponential blowup: $k$ nested JUMPIs produce $2^k$ speculative paths. In practice, you'd limit speculation depth to 1 or 2 levels.
+
+3. **Side-effect boundaries.** Any block that touches storage, emits logs, or makes external calls cannot be speculated — the effects can't be undone. In real Solidity contracts, most interesting branches (the ones that diverge based on user input) lead to side-effecting code almost immediately.
+
+4. **Gas accounting.** Speculated paths consume real computation but the gas must only be charged for the path actually taken. This requires careful bookkeeping to avoid over- or under-charging.
+
+The technique is most useful in static analysis tools (exploring all paths through a contract) and AOT compilers (pre-computing both branches at compile time for simple cases). For a runtime interpreter, the overhead of forking state typically exceeds the savings from avoiding the branch stall.
 ```
 
 ---

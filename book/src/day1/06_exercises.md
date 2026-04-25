@@ -1,4 +1,4 @@
-# Exercises — Day 1
+# Exercises — Module 1
 
 ```admonish example title="Exercise Setup" collapsible=true
 **Start from the stub branch:**
@@ -307,15 +307,15 @@ is that bytes you never wrote are zero — the EVM guarantees this.
 
 | Yellow Paper symbol | Our type / field | Notes |
 |---|---|---|
-| $\sigma$ (world state) | Not yet modelled | Introduced in Day 3 |
+| $\sigma$ (world state) | Not yet modelled | Introduced in Module 3 |
 | $\mu$ (machine state) | Fields of `ExecutionContext` | Combined in the interpreter |
 | $\mu_s$ (stack) | `Stack` | Exercises 1.5 and 1.6 |
 | $\mu_m$ (memory) | `Memory` | Exercises 1.7 and 1.8 |
-| $\mu_g$ (gas) | `u64` field | Introduced in Day 2 |
-| $\mu_{pc}$ (program counter) | `usize` field | Introduced in Day 2 |
+| $\mu_g$ (gas) | `u64` field | Introduced in Module 2 |
+| $\mu_{pc}$ (program counter) | `usize` field | Introduced in Module 2 |
 | Values on $\mu_s$ | `U256` | Exercises 1.1 – 1.4 |
 
-All values in the range \[0, 2²⁵⁶) correspond to `U256`. When the Yellow Paper
+All values in the range \[0, 2²⁵⁶) correspond to `U256`. When the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf)
 writes "let x ≡ $\mu_s[0]$" it means "pop the top of the stack into x". When it
 writes "$\mu_m[i]$" it means "byte i in memory". These direct mappings are why we
 model the types so literally — the code reads like the spec.

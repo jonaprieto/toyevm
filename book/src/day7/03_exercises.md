@@ -1,4 +1,4 @@
-# Exercises — Day 7
+# Exercises — Module 7
 
 ```admonish example title="Exercise Setup" collapsible=true
     git checkout -b my-day-7 my-day-6
@@ -15,7 +15,7 @@ Peek: `git show day-7:src/compiler/fold.rs | head -50`
 Compare: `git diff day-7 -- src/compiler/fold.rs src/compiler/dce.rs`
 ```
 
-These exercises implement constant folding and dead code elimination (DCE) as composable optimization passes over the CFG from Day 6.
+These exercises implement constant folding and dead code elimination (DCE) as composable optimization passes over the CFG from Module 6.
 
 ## OptimizationPass trait (reference)
 
@@ -133,7 +133,7 @@ the returned `changes > 0` and that block 1 no longer exists in `cfg.blocks`.
 cargo test ex_7_5
 ```
 
-**Hint.** The `DeadCodeElim` pass relies on the liveness analysis from Day 6. Run liveness
+**Hint.** The `DeadCodeElim` pass relies on the liveness analysis from Module 6. Run liveness
 first (or have `DeadCodeElim::run` call it internally) to determine which blocks are dead,
 then remove them from `cfg.blocks` and drop their edges.
 
@@ -221,4 +221,4 @@ automatically.
 
 ---
 
-Run all Day 7 tests: `cargo test fold` and `cargo test dce`
+Run all Module 7 tests: `cargo test fold` and `cargo test dce`

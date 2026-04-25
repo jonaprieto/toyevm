@@ -1,9 +1,9 @@
-# Exercises — Day 2
+# Exercises — Module 2
 
 ```admonish example title="Exercise Setup" collapsible=true
 **Create your working branch:**
 
-    git checkout -b my-day-2 my-day-1    # branch from your completed Day 1
+    git checkout -b my-day-2 my-day-1    # branch from your completed Module 1
 
 **Create stub files** — copy the type definitions and method signatures from the reference, replacing every function body with `todo_exercise!()`:
 
@@ -22,11 +22,11 @@ Then implement until all tests pass and compare:
     git diff day-2 -- src/opcode.rs src/gas.rs src/interpreter.rs
 ```
 
-Day 2 introduced the fetch-decode-execute loop: how raw bytes become `Opcode`
+Module 2 introduced the fetch-decode-execute loop: how raw bytes become `Opcode`
 variants, how each opcode manipulates the stack, and how gas is consumed. These
 exercises walk the full pipeline from bytecode bytes to execution results.
 
-> **Running the test suites.** Two test filters cover most of Day 2:
+> **Running the test suites.** Two test filters cover most of Module 2:
 > ```sh
 > cargo test opcode
 > cargo test interpreter
@@ -186,7 +186,7 @@ cargo test ex_2_5
 
 **Hint.** Remember stack order: `PUSH1 a`, `PUSH1 b`, `SUB` computes `b - a`
 (the second item pushed minus the first — i.e., top-of-stack is subtracted
-from the item below). Check the Yellow Paper's stack diagram for each opcode
+from the item below). Check the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf)'s stack diagram for each opcode
 to confirm operand order.
 
 > **Rust pattern — exhaustive `match`.**
@@ -213,7 +213,7 @@ and asserts the top of the stack is `U256::ZERO`.
 cargo test ex_2_6
 ```
 
-**Hint.** The EVM specification (Yellow Paper §9.4.2) explicitly defines
+**Hint.** The EVM specification ([Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf) §9.4.2) explicitly defines
 `x ÷ 0 ≡ 0`. Your `U256::checked_div` or the interpreter's DIV arm must handle
 this. If the test panics instead of returning zero, find the division
 implementation and add a zero-divisor guard.
@@ -259,7 +259,96 @@ in your test setup.
 
 ---
 
-## Exercise 2.8 — Out of Gas
+## Exercise 2.8 — BYTE
+
+**What to implement.** Write tests that verify `BYTE` extracts individual bytes
+from a 256-bit word using big-endian indexing:
+- Store `0xFF00...00` (byte 0 is `0xFF`, rest are zero). `BYTE` with index `0`
+  → `0xFF`.
+- Same word, `BYTE` with index `1` → `0x00`.
+- `BYTE` with index `32` (out of range) → `0x00`.
+
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
+
+**How to verify:**
+
+```sh
+cargo test ex_2_8
+```
+
+**Hint.** Remember `BYTE` uses big-endian convention: index 0 is the *most*
+significant byte (leftmost in hex), not the least significant. Build a word
+with `PUSH32` where only one byte is non-zero, then verify `BYTE` at that
+position returns the expected value.
+
+> **Rust pattern — byte extraction from `U256`.**
+> The `U256` type's `.to_bytes()` returns a `[u8; 32]` in big-endian order.
+> `BYTE(i, x)` is equivalent to `x.to_bytes()[i]` when `i < 32`, which makes
+> the implementation a straightforward index into the byte array. For
+> out-of-range indices, return zero — no need for error handling.
+
+---
+
+## Exercise 2.9 — SHL and SHR
+
+**What to implement.** Write tests for the shift opcodes:
+- `SHL`: `PUSH1 1`, `PUSH1 8`, `SHL` → `0x100` (1 shifted left by 8 = 256).
+- `SHR`: `PUSH2 0x0100`, `PUSH1 8`, `SHR` → `0x01` (256 shifted right by 8 = 1).
+- Shifting by 256 or more yields zero: `PUSH1 1`, `PUSH2 0x0100`, `SHL` → `0`.
+
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
+
+**How to verify:**
+
+```sh
+cargo test ex_2_9
+```
+
+**Hint.** Watch the stack order: the shift amount is on top, the value is below.
+`SHL` pops `shift` (top) then `value` (second) and pushes `value << shift`. For
+shifts ≥ 256, the result must be zero — not a panic. Use `U256::checked_shl` or
+guard with a range check.
+
+> **Rust pattern — guarded arithmetic.**
+> Rust's primitive shift operators panic when the shift amount exceeds the bit
+> width. For `U256`, shifting by 256+ is well-defined in the EVM (result is zero),
+> so the interpreter must guard the operation: check the shift amount first, and
+> only call the shift primitive when it's in range. This is the same "check then
+> act" pattern used for division by zero in Exercise 2.6.
+
+---
+
+## Exercise 2.10 — SAR (Arithmetic Shift Right)
+
+**What to implement.** Verify that `SAR` preserves the sign bit:
+- Positive value: `SAR` on `0x80` (128) by 1 → `0x40` (64). Same as `SHR`.
+- Negative value (two's complement): `SAR` on `U256::MAX` (all bits set, i.e. $-1$)
+  by 1 → `U256::MAX` (still $-1$, because the sign bit propagates).
+- `SAR` on `0xFFFFF...FFFE` ($-2$) by 1 → `0xFFFFF...FFFF` ($-1$).
+
+**File:** [`src/interpreter.rs`](https://github.com/jonaprieto/toyevm/blob/main/src/interpreter.rs)
+
+**How to verify:**
+
+```sh
+cargo test ex_2_10
+```
+
+**Hint.** The sign bit is bit 255 (the most significant). If it's set, vacated
+bits after the shift must be filled with ones, not zeros. One approach: compute
+`SHR`, then OR in a mask of ones for the vacated positions when the sign bit is
+set. Another: treat the top bit separately and build the result from there.
+
+> **Rust pattern — two's complement awareness.**
+> Rust's `i128` and `i64` types have built-in arithmetic right shift (`>>`), but
+> `U256` is unsigned — it has no notion of sign. The EVM's `SAR` *interprets* the
+> 256-bit value as a signed two's complement integer, shifts, then stores the
+> result back as unsigned. This is a common pattern in low-level code: the same
+> bit pattern has different meanings depending on the operation applied to it.
+
+---
+
+## Exercise 2.11 — Out of Gas
 
 **What to implement.** Run the ADD sequence from Exercise 2.3 with `gas_limit = 1`.
 The sequence needs 9 gas; with only 1 available it should fail. Assert that
@@ -271,7 +360,7 @@ the output is empty.
 **How to verify:**
 
 ```sh
-cargo test ex_2_8
+cargo test ex_2_11
 ```
 
 **Hint.** Look at the `ExecutionResult` or equivalent type that `run()` returns.
@@ -292,7 +381,7 @@ when gas is exhausted, the gas check is missing from the dispatch loop.
 
 ---
 
-## Exercise 2.9 — STOP
+## Exercise 2.12 — STOP
 
 **What to implement.** Execute a single-byte program `[0x00]` (just `STOP`) with
 a generous gas limit. Assert:
@@ -305,7 +394,7 @@ a generous gas limit. Assert:
 **How to verify:**
 
 ```sh
-cargo test ex_2_9
+cargo test ex_2_12
 ```
 
 **Hint.** `STOP` does not pop anything, does not push anything, and costs 0 gas.
@@ -322,7 +411,7 @@ result and verify it is an empty `Vec<u8>` or slice.
 
 ---
 
-## Exercise 2.10 — RETURN
+## Exercise 2.13 — RETURN
 
 **What to implement.** Assemble a program that:
 1. Uses `MSTORE` to write a value into memory at offset 0.
@@ -334,7 +423,7 @@ result and verify it is an empty `Vec<u8>` or slice.
 **How to verify:**
 
 ```sh
-cargo test ex_2_10
+cargo test ex_2_13
 ```
 
 **Hint.** `RETURN` takes two stack arguments: `offset` and `length`. It copies
@@ -353,12 +442,12 @@ wrote with `MSTORE`.
 ---
 
 ```admonish success title="Milestone: Return42"
-After completing Day 2, your interpreter can execute the `Return42` Solidity contract — a real compiled contract that stores 42 in memory and returns it. Run `cargo test --test solidity_integration return42` to verify.
+After completing Module 2, your interpreter can execute the `Return42` Solidity contract — a real compiled contract that stores 42 in memory and returns it. Run `cargo test --test solidity_integration return42` to verify.
 ```
 
 ## Yellow Paper Map
 
-| Yellow Paper symbol | Meaning | Our representation |
+| [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf) symbol | Meaning | Our representation |
 |---|---|---|
 | $\mu_g$ | Gas remaining | `u64` field in the execution context |
 | $\mu_{pc}$ | Program counter | `usize` field, incremented by the fetch step |
@@ -366,12 +455,12 @@ After completing Day 2, your interpreter can execute the `Return42` Solidity con
 | $\alpha$ | Stack items produced by opcode | Encoded in opcode documentation |
 | $w$ | Current opcode word | `Opcode` enum variant |
 
-**Section 9.4** of the Yellow Paper defines the state transition for each opcode
+**Section 9.4** of the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf) defines the state transition for each opcode
 as a tuple $(\mu'_g, \mu'_{pc}, \mu'_s, \mu'_m)$ — the new gas, program counter, stack,
 and memory after execution. Our interpreter loop computes exactly this tuple on
 each iteration. When you read an opcode's formal specification, map each primed
 symbol (′) to the field you update in the Rust implementation.
 
 The gas cost function `C` from §9.4.1 decomposes into a base cost (fixed per
-opcode) plus a dynamic component for memory expansion. Day 2 covers the base
-costs; the memory expansion formula appears in Day 3.
+opcode) plus a dynamic component for memory expansion. Module 2 covers the base
+costs; the memory expansion formula appears in Module 3.

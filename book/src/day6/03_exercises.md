@@ -1,4 +1,4 @@
-# Exercises — Day 6
+# Exercises — Module 6
 
 ```admonish example title="Exercise Setup" collapsible=true
     git checkout -b my-day-6 my-day-5
@@ -238,4 +238,4 @@ A block is live iff it appears in **both** sets.
 
 ---
 
-Run all Day 6 tests: `cargo test compiler`
+Run all Module 6 tests: `cargo test compiler`

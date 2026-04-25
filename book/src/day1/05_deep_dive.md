@@ -1,6 +1,6 @@
-# Deep Dive — Day 1
+# Deep Dive — Module 1
 
-These are questions I asked myself after implementing Day 1. Try to answer each question before expanding the answer.
+Review questions for Module 1. Try answering before expanding.
 
 ---
 
@@ -15,7 +15,7 @@ Keccak-256 produces 32-byte hashes, and Ethereum uses Keccak pervasively — for
 **Q: What happens when the EVM stack overflows?**
 
 ```admonish note title="Answer" collapsible=true
-If a contract pushes the 1025th element, the EVM triggers an **exceptional halt** — not a REVERT. All state changes are discarded and **all remaining gas is consumed**. This is a hard protocol limit (Yellow Paper §9.4.2), not a configurable parameter. Note the difference from REVERT, which refunds unused gas.
+If a contract pushes the 1025th element, the EVM triggers an **exceptional halt** — not a REVERT. All state changes are discarded and **all remaining gas is consumed**. This is a hard protocol limit ([Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf) §9.4.2), not a configurable parameter. Note the difference from REVERT, which refunds unused gas.
 ```
 
 ---

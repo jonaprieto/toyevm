@@ -5,7 +5,6 @@
 | Tool | Required? | Install |
 |------|----------|---------|
 | Rust (nightly) | Yes | [rustup.rs](https://rustup.rs/) |
-| mdBook | For the book | `cargo install mdbook` |
 | Foundry | Optional | [getfoundry.sh](https://getfoundry.sh/introduction/installation) |
 
 ## Clone and set up
@@ -15,7 +14,7 @@ git clone https://github.com/jonaprieto/toyevm.git
 cd toyevm
 ```
 
-## Start Day 1
+## Start Module 1
 
 The `day-1-start` branch has the project structure with **stub files** — all type definitions and method signatures are in place, but every function body is `todo_exercise!()`. The work is to fill them in.
 
@@ -28,16 +27,21 @@ git checkout -b my-day-1       # your personal working branch
 
 ```
 toyevm/
+├── Cargo.lock
 ├── Cargo.toml          ← Rust project manifest (lib + binary)
 ├── src/
 │   ├── lib.rs          ← crate root — declares modules + todo_exercise! macro
 │   ├── main.rs         ← binary entry point
-│   ├── types/
-│   │   ├── mod.rs      ← re-exports U256
-│   │   └── u256.rs     ← ★ Exercise 1.1–1.4: implement U256 type
+│   ├── memory.rs       ← ★ Exercise 1.7–1.8: implement Memory
 │   ├── stack.rs        ← ★ Exercise 1.5–1.6: implement Stack
-│   └── memory.rs       ← ★ Exercise 1.7–1.8: implement Memory
-└── book/               ← this book (mdBook source)
+│   └── types/
+│       ├── mod.rs      ← re-exports U256
+│       └── u256.rs     ← ★ Exercise 1.1–1.4: implement U256 type
+└── book/
+    ├── book.toml
+    └── src/
+        ├── SUMMARY.md
+        └── introduction.md
 ```
 
 The files marked with ★ contain stubs like this:
@@ -83,13 +87,13 @@ To peek at the full reference solution at any point:
 `git show day-1:src/types/u256.rs` (shows the file without switching branches)
 ```
 
-## Advance to the next day
+## Advance to the next module
 
 ```bash
-git checkout -b my-day-2 my-day-1    # branch from your completed Day 1
+git checkout -b my-day-2 my-day-1    # branch from your completed Module 1
 ```
 
-For Days 2–7, the exercise chapter provides stub code to paste into new files. The pattern is always:
+For Modules 2–7, the exercise chapter provides stub code to paste into new files. The pattern is always:
 
 1. Create the stub files shown in the "Exercise Setup" section
 2. `cargo test` — new tests fail
@@ -97,13 +101,13 @@ For Days 2–7, the exercise chapter provides stub code to paste into new files.
 4. `git diff day-N -- src/` — compare to reference
 
 ```admonish tip title="How the branches work"
-Solution branches `day-1` through `day-7` are *stacked snapshots* — each contains everything from prior days plus new code. Your personal `my-day-N` branches grow incrementally as you add modules. Use `git diff day-N` to compare any day.
+Solution branches `day-1` through `day-7` are *stacked snapshots* — each contains everything from prior modules plus new code. Your personal `my-day-N` branches grow incrementally as you add modules. Use `git diff day-N` to compare any module.
 ```
 
 ## Comparing your work — quick reference
 
-| Day | After completing | Compare with |
-|-----|-----------------|--------------|
+| Module | After completing | Compare with |
+|--------|-----------------|--------------|
 | 1 | all 37 tests pass | `git diff day-1 -- src/types src/stack.rs src/memory.rs` |
 | 2 | all tests pass | `git diff day-2 -- src/opcode.rs src/gas.rs src/interpreter.rs` |
 | 3 | all tests pass | `git diff day-3 -- src/storage.rs src/context.rs src/interpreter.rs` |
@@ -112,13 +116,13 @@ Solution branches `day-1` through `day-7` are *stacked snapshots* — each conta
 | 6 | all tests pass | `git diff day-6 -- src/compiler/` |
 | 7 | all tests pass | `git diff day-7 -- src/compiler/fold.rs src/compiler/dce.rs` |
 
-## How each day works
+## How each module works
 
-Each day has three parts:
+Each module has three parts:
 
 1. **Notes** — what I learned about the concept, with Rust code pulled directly from the source files
 2. **Exercises** — how I tested my understanding, with `cargo test` commands and hints
-3. **Deep Dive** — questions I asked myself and worked through after implementing
+3. **Deep Dive** — review questions to test and deepen understanding
 
 The workflow I followed:
 
@@ -138,16 +142,16 @@ Work through the Deep Dive questions
 
 ## Running Solidity examples
 
-The repository includes a [Foundry](https://getfoundry.sh/) project in `examples/` with six Solidity contracts. As you progress through the days, the interpreter gains enough opcodes to execute them — each is a milestone that proves the EVM actually works.
+The repository includes a [Foundry](https://getfoundry.sh/) project in `examples/` with six Solidity contracts. As you progress through the modules, the interpreter gains enough opcodes to execute them — each is a milestone that proves the EVM actually works.
 
 | Contract | What it does | Runnable after |
 |----------|-------------|----------------|
-| `Return42` | Returns 42 from a `fallback()` in assembly | **Day 2** |
-| `Store42` | Writes 42 to storage, reads it back, returns it | **Day 3** |
-| `Loop` | Sums 1..10 using a `for` loop in assembly | **Day 3** |
-| `Add` | `add(uint256,uint256)` — ABI dispatch + checked arithmetic | **Day 3** |
-| `Counter` | `increment()` / `get()` — storage + function dispatch | **Day 3** |
-| `EventEmitter` | `set(uint256)` — emits a `LOG2` event | **Day 4** |
+| `Return42` | Returns 42 from a `fallback()` in assembly | **Module 2** |
+| `Store42` | Writes 42 to storage, reads it back, returns it | **Module 3** |
+| `Loop` | Sums 1..10 using a `for` loop in assembly | **Module 3** |
+| `Add` | `add(uint256,uint256)` — ABI dispatch + checked arithmetic | **Module 3** |
+| `Counter` | `increment()` / `get()` — storage + function dispatch | **Module 3** |
+| `EventEmitter` | `set(uint256)` — emits a `LOG2` event | **Module 4** |
 
 Integration tests in `tests/solidity_integration.rs` verify these milestones automatically:
 

@@ -1,6 +1,6 @@
-# Deep Dive — Day 5
+# Deep Dive — Module 5
 
-Questions I worked through after implementing Day 5. Try to answer each one before expanding.
+Review questions for Module 5. Try answering before expanding.
 
 ---
 

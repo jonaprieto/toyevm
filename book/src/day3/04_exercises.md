@@ -1,4 +1,4 @@
-# Exercises — Day 3
+# Exercises — Module 3
 
 ```admonish example title="Exercise Setup" collapsible=true
     git checkout -b my-day-3 my-day-2
@@ -17,9 +17,9 @@ Peek at signatures: `git show day-3:src/storage.rs | head -100`
 Compare when done: `git diff day-3 -- src/storage.rs src/context.rs src/interpreter.rs`
 ```
 
-Day 3 covers persistent storage, memory-expansion gas, control flow, and the
-execution environment passed into a call. These exercises are longer than Day 1
-and Day 2: several require assembling multi-opcode bytecode sequences by hand.
+Module 3 covers persistent storage, memory-expansion gas, control flow, and the
+execution environment passed into a call. These exercises are longer than Module 1
+and Module 2: several require assembling multi-opcode bytecode sequences by hand.
 Work through them in order — each builds on the previous one.
 
 > **Running the test suite:**
@@ -35,7 +35,7 @@ Work through them in order — each builds on the previous one.
 **What to implement.** Write an integration test that executes:
 
 ```text
-PUSH32 <some 32-byte value>
+PUSH32 0xDEADBEEF_CAFEBABE_12345678_9ABCDEF0_DEADBEEF_CAFEBABE_12345678_9ABCDEF0
 PUSH1  0x00      # offset = 0
 MSTORE           # store word to memory[0..32]
 PUSH1  0x00      # offset = 0
@@ -136,7 +136,7 @@ then the *value* (second item), so push the value before the key.
 > **Rust pattern — `HashMap` as a storage model.**
 > `Storage` wraps a `HashMap<U256, U256>`. This is a faithful model of the EVM
 > specification, which defines account storage as a mapping from 256-bit keys to
-> 256-bit values ($\sigma[a]_s$ in Yellow Paper notation). `HashMap` gives O(1)
+> 256-bit values ($\sigma[a]_s$ in [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf) notation). `HashMap` gives O(1)
 > average-case reads and writes, just like a trie lookup in a real client.
 > The difference is that our `HashMap` lives only for the duration of a test;
 > a production EVM persists it to a Merkle Patricia Trie on disk.
@@ -431,12 +431,12 @@ instruction.
 ---
 
 ```admonish success title="Milestone: Real Solidity Contracts"
-After completing Day 3, your interpreter can execute four real Solidity contracts: `Store42` (storage), `Loop` (control flow), and `Add` (ABI dispatch with function selectors, calldata decoding, and checked arithmetic). Run `cargo test --test solidity_integration` to verify all of them.
+After completing Module 3, your interpreter can execute four real Solidity contracts: `Store42` (storage), `Loop` (control flow), and `Add` (ABI dispatch with function selectors, calldata decoding, and checked arithmetic). Run `cargo test --test solidity_integration` to verify all of them.
 ```
 
 ## Yellow Paper Map
 
-| Yellow Paper symbol | Meaning | Our representation |
+| [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf) symbol | Meaning | Our representation |
 |---|---|---|
 | $I$ | Execution environment (a tuple) | Execution context struct |
 | $I_a$ | Address of the account being executed | `address: Address` field |
@@ -448,10 +448,10 @@ After completing Day 3, your interpreter can execute four real Solidity contract
 | $I_H$ | Current block header | `block: BlockContext` struct |
 | $I_e$ | Call depth | `depth: u32` field |
 
-**Section 4.1** of the Yellow Paper defines the execution environment $I$ as a
-nine-tuple. Each element has a direct counterpart in our context struct. Day 3
+**Section 4.1** of the [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf) defines the execution environment $I$ as a
+nine-tuple. Each element has a direct counterpart in our context struct. Module 3
 fills in $I_d$ (calldata) and connects $\sigma[I_a]_s$ (account storage) to our
-`Storage` type. Future days will add $I_v$ (value) and $I_H$ (block information)
+`Storage` type. Future modules will add $I_v$ (value) and $I_H$ (block information)
 for the full `CALL` and environment opcodes.
 
 The formula for memory expansion gas referenced in Exercise 3.2 is:

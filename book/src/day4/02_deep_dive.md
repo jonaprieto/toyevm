@@ -1,6 +1,6 @@
-# Deep Dive — Day 4
+# Deep Dive — Module 4
 
-Questions I worked through after implementing Day 4. Try to answer each one before expanding.
+Review questions for Module 4. Try answering before expanding.
 
 ---
 

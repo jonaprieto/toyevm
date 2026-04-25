@@ -14,7 +14,7 @@ Without gas, a contract could loop forever, and every Ethereum node would be stu
 |------|------|----------|
 | Zero | 0 | STOP, JUMPDEST |
 | Base | 2 | PUSH0, PC, MSIZE, GAS, POP |
-| Very Low | 3 | ADD, SUB, LT, GT, EQ, AND, OR, NOT, PUSH1-32, DUP, SWAP |
+| Very Low | 3 | ADD, SUB, LT, GT, EQ, AND, OR, NOT, BYTE, SHL, SHR, SAR, PUSH1-32, DUP, SWAP |
 | Low | 5 | MUL, DIV, MOD, SIGNEXTEND |
 | Mid | 8 | ADDMOD, MULMOD, JUMP |
 | High | 10 | JUMPI |
@@ -22,7 +22,7 @@ Without gas, a contract could loop forever, and every Ethereum node would be stu
 **Dynamic costs** depend on operand values:
 - **Memory expansion**: grows quadratically — $C_{mem}(a) = 3a + \lfloor a^2 / 512 \rfloor$
 - **EXP**: base cost + 50 per byte in the exponent
-- **SLOAD/SSTORE**: cold vs. warm access (Day 3)
+- **SLOAD/SSTORE**: cold vs. warm access (Module 3)
 
 ## The memory expansion formula
 
@@ -65,8 +65,11 @@ We model execution outcomes as `Result<ExecutionResult, EvmError>`. A successful
 - **2.5** — MUL, SUB, DIV correctness
 - **2.6** — Division by zero returns 0
 - **2.7** — LT, GT, EQ produce 0 or 1
-- **2.8** — Out-of-gas detection
-- **2.9** — STOP returns empty output
-- **2.10** — RETURN copies a memory range to output
+- **2.8** — BYTE extracts individual bytes from a word
+- **2.9** — SHL and SHR shift operations
+- **2.10** — SAR preserves the sign bit
+- **2.11** — Out-of-gas detection
+- **2.12** — STOP returns empty output
+- **2.13** — RETURN copies a memory range to output
 
 Run: `cargo test opcode` and `cargo test interpreter`

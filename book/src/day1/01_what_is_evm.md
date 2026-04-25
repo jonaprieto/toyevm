@@ -40,18 +40,18 @@ One of the first things I wondered was why Ethereum chose 256-bit (32-byte) word
 The newtype pattern (`struct U256([u8; 32])`) gives us type safety — you can't accidentally pass a raw byte array where a U256 is expected — plus a namespace for methods and operator overloading.
 ```
 
-## Yellow Paper notation
+## [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf) notation
 
-The Ethereum Yellow Paper uses Greek letters for the machine state:
+The Ethereum [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf) uses Greek letters for the machine state:
 
 | Symbol | Meaning | Our Rust type |
 |--------|---------|---------------|
-| $\sigma$ (sigma) | World state (all accounts) | — (Day 3+) |
+| $\sigma$ (sigma) | World state (all accounts) | — (Module 3+) |
 | $\mu$ | Machine state | — (the interpreter struct) |
 | $\mu_s$ | Stack | `Stack` |
 | $\mu_m$ | Memory | `Memory` |
-| $\mu_g$ | Gas remaining | `u64` (Day 2) |
-| $\mu_{pc}$ | Program counter | `usize` (Day 2) |
+| $\mu_g$ | Gas remaining | `u64` (Module 2) |
+| $\mu_{pc}$ | Program counter | `usize` (Module 2) |
 
 The execution model is a pure function:
 
@@ -61,9 +61,9 @@ The execution model is a pure function:
 
 Where `I` is the execution environment (caller, value, bytecode, etc.). Given the same inputs, the outputs are always the same. No randomness, no system calls, no I/O.
 
-## What we build on Day 1
+## What we build in Module 1
 
-On Day 1 we implement the three core data structures without writing a single opcode. These are the substrate the interpreter will live in:
+In Module 1 we implement the three core data structures without writing a single opcode. These are the substrate the interpreter will live in:
 
 | Module | File | What it is |
 |--------|------|------------|

@@ -1,4 +1,4 @@
-# Exercises — Day 4
+# Exercises — Module 4
 
 ```admonish example title="Exercise Setup" collapsible=true
     git checkout -b my-day-4 my-day-3
@@ -37,7 +37,7 @@ pair and asserts the outputs are equal.
 cargo test ex_4_1
 ```
 
-**Hint.** The Yellow Paper formula is `address = keccak256(rlp([sender, nonce]))[12:]`.
+**Hint.** The [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf) formula is `address = keccak256(rlp([sender, nonce]))[12:]`.
 Use the `Address` newtype so the compiler catches raw-byte mistakes at the type boundary.
 
 > **Rust pattern — newtype for `Address`.** Wrap `[u8; 20]` in a tuple struct
@@ -120,7 +120,7 @@ $G_{log} + G_{logdata} \times \text{data\_len} = \text{expected}$ for two inputs
 cargo test ex_4_5
 ```
 
-**Hint.** Yellow Paper Section 9.2 defines $G_{log} = 375$, $G_{logdata} = 8$,
+**Hint.** [Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf) Section 9.2 defines $G_{log} = 375$, $G_{logdata} = 8$,
 $G_{logtopic} = 375$. For LOG0 there are no topics, so the topic term is zero.
 
 > **Rust pattern — formula verification in tests.** Small arithmetic unit tests pin
@@ -158,4 +158,4 @@ cargo test ex_4_6
 | `L_A(s, n)` | CREATE address derivation | §7.1 |
 | `CREATE2` preimage | `0xff ++ s ++ ζ ++ keccak(i)` | §7.1 |
 
-Run all Day 4 tests: `cargo test contract` and `cargo test host`
+Run all Module 4 tests: `cargo test contract` and `cargo test host`

@@ -1,6 +1,6 @@
-# Deep Dive — Day 3
+# Deep Dive — Module 3
 
-Questions I worked through after implementing Day 3. Try to answer each one before expanding.
+Review questions for Module 3. Try answering before expanding.
 
 ---
 
